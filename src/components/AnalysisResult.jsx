@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Beef, Droplet, Wheat, ArrowLeft } from 'lucide-react';
+import { Flame, Beef, Droplet, Wheat, ArrowLeft, Volume2, Leaf } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { analyzeImage } from '../services/ai';
 import '../styles/index.css';
 
-const AnalysisResult = ({ image, onClose }) => {
+const AnalysisResult = ({ image, onClose, userDiet = 'none' }) => {
     const { t, language } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
 
     useEffect(() => {
         const processImage = async () => {
-            const result = await analyzeImage(image, language);
+            const result = await analyzeImage(image, language, userDiet);
             setData(result);
             setLoading(false);
         };
@@ -61,12 +61,78 @@ const AnalysisResult = ({ image, onClose }) => {
                 </div>
 
                 <div style={{ background: '#1a1a1a', borderRadius: '12px', padding: '15px' }}>
-                    <h3>{t('healthScore')}</h3>
-                    <div style={{ width: '100%', height: '10px', background: '#333', borderRadius: '5px', marginTop: '10px', overflow: 'hidden' }}>
+                    {/* Dietary Warning */}
+                    {data.isSafe === false && (
+                        <div style={{
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            border: '1px solid #ef4444',
+                            borderRadius: '8px',
+                            padding: '10px',
+                            marginBottom: '15px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px'
+                        }}>
+                            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                            <div>
+                                <strong style={{ color: '#ef4444', display: 'block' }}>Dietary Warning</strong>
+                                <span style={{ color: '#fca5a5', fontSize: '0.9rem' }}>{data.warning}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Eco-Scan & Health Score */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <h3>{t('healthScore')}</h3>
+                        {data.carbonFootprint && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#333', padding: '5px 10px', borderRadius: '20px' }}>
+                                <Leaf size={16} color={data.carbonFootprint === 'Low' ? '#4ade80' : data.carbonFootprint === 'Medium' ? '#facc15' : '#ef4444'} />
+                                <span style={{ fontSize: '0.8rem', color: '#ccc' }}>Eco: {data.carbonFootprint}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ width: '100%', height: '10px', background: '#333', borderRadius: '5px', borderRadius: '5px', overflow: 'hidden' }}>
                         <div style={{ width: `${data.healthScore}%`, height: '100%', background: 'var(--bro-green)' }}></div>
                     </div>
                     <p style={{ textAlign: 'right', marginTop: '5px', color: 'var(--bro-green)' }}>{data.healthScore}/100</p>
+
                     {data.briefTip && <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#ccc', fontStyle: 'italic', borderTop: '1px solid #333', paddingTop: '10px' }}>💡 {data.briefTip}</p>}
+                    {data.sustainabilityTip && <p style={{ marginTop: '5px', fontSize: '0.9rem', color: '#888', fontStyle: 'italic' }}>🌿 {data.sustainabilityTip}</p>}
+
+                    {/* Voice Coach Button */}
+                    <button
+                        onClick={() => {
+                            const text = `${data.foodName}. ${data.calories} calories. ${data.briefTip}`;
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            // Try to match language
+                            if (language === 'ko') utterance.lang = 'ko-KR';
+                            else if (language === 'ja') utterance.lang = 'ja-JP';
+                            else if (language === 'es') utterance.lang = 'es-ES';
+                            else if (language === 'fr') utterance.lang = 'fr-FR';
+                            else if (language === 'zh') utterance.lang = 'zh-CN';
+                            else utterance.lang = 'en-US';
+
+                            window.speechSynthesis.cancel(); // Stop previous
+                            window.speechSynthesis.speak(utterance);
+                        }}
+                        style={{
+                            marginTop: '15px',
+                            background: '#333',
+                            border: '1px solid #555',
+                            color: 'white',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            width: '100%'
+                        }}
+                    >
+                        <Volume2 size={18} /> Listen to Analysis
+                    </button>
                 </div>
             </div>
 

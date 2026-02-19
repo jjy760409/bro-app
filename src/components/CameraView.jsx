@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, RefreshCw, Zap, Clock, Share2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Camera, RefreshCw, Zap, Clock, Share2, Settings, Flame } from 'lucide-react';
 import '../styles/index.css';
 
-const CameraView = ({ onCapture, onHistory, onShare }) => {
+const CameraView = ({ onCapture, onHistory, onShare, onProfile }) => {
+    const { streak } = useAuth();
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [stream, setStream] = useState(null);
@@ -92,12 +94,19 @@ const CameraView = ({ onCapture, onHistory, onShare }) => {
             <div className="scan-overlay full-screen pointer-events-none"></div>
 
             {/* Top Controls */}
-            <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 20, display: 'flex', gap: '15px' }}>
+            <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 20, display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '8px 12px', borderRadius: '20px', border: '1px solid rgba(255,165,0,0.5)' }}>
+                    <Flame size={20} color="orange" fill="orange" />
+                    <span style={{ color: 'orange', fontWeight: 'bold' }}>{streak}</span>
+                </div>
                 <button onClick={onShare} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Share2 size={24} />
                 </button>
                 <button onClick={onHistory} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Clock size={24} />
+                </button>
+                <button onClick={onProfile} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Settings size={24} />
                 </button>
             </div>
 

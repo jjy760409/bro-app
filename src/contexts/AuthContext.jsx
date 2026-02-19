@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [scansLeft, setScansLeft] = useState(3);
+    const [streak, setStreak] = useState(0);
     const [isDemoMode, setIsDemoMode] = useState(false);
 
     useEffect(() => {
@@ -31,15 +32,44 @@ export const AuthProvider = ({ children }) => {
                     try {
                         const userSnap = await getDoc(userRef);
                         if (userSnap.exists()) {
-                            setScansLeft(userSnap.data().scansLeft);
+                            const data = userSnap.data();
+                            setScansLeft(data.scansLeft);
+
+                            // Streak Logic
+                            const today = new Date().toDateString();
+                            const lastVisit = data.lastVisit || new Date(0).toDateString();
+
+                            if (today !== lastVisit) {
+                                const yesterday = new Date();
+                                yesterday.setDate(yesterday.getDate() - 1);
+
+                                let newStreak = data.streak || 0;
+                                if (yesterday.toDateString() === lastVisit) {
+                                    newStreak += 1;
+                                } else {
+                                    newStreak = 1; // Broken streak
+                                }
+
+                                await updateDoc(userRef, {
+                                    lastVisit: today,
+                                    streak: newStreak
+                                });
+                                setStreak(newStreak);
+                            } else {
+                                setStreak(data.streak || 1);
+                            }
                         } else {
+                            // New User
                             await setDoc(userRef, {
                                 email: currentUser.email,
                                 scansLeft: 3,
                                 isPremium: false,
-                                createdAt: new Date()
+                                createdAt: new Date(),
+                                streak: 1,
+                                lastVisit: new Date().toDateString()
                             });
                             setScansLeft(3);
+                            setStreak(1);
                         }
                     } catch (e) {
                         console.error("Firestore Error:", e);
@@ -162,7 +192,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, scansLeft, decrementScans, setPremium, cancelSubscription, requestRefund, loading, isDemoMode }}>
+        <AuthContext.Provider value={{ user, login, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading, isDemoMode }}>
             {!loading && children}
         </AuthContext.Provider>
     );
