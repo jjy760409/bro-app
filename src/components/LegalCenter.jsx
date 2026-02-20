@@ -80,7 +80,7 @@ const LegalCenter = ({ onClose, initialTab = 'terms' }) => {
                 ))}
             </div>
 
-            {/* Content */}
+            {/* Content (Scrollable) */}
             <div style={{
                 flex: 1,
                 width: '100%',
@@ -95,9 +95,9 @@ const LegalCenter = ({ onClose, initialTab = 'terms' }) => {
                 {activeTab === 'refund' && <RefundContent />}
             </div>
 
-            {/* Footer Action */}
+            {/* Footer Action (Sticky) */}
             {!hasAccepted && (
-                <div style={{ width: '100%', padding: '20px', background: '#111', borderTop: '1px solid #333' }}>
+                <div style={{ width: '100%', padding: '20px', background: '#111', borderTop: '1px solid #333', zIndex: 10 }}>
                     <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '10px', textAlign: 'center' }}>
                         By continuing, you agree to our Terms, Privacy Policy, and Refund Policy.
                     </p>
