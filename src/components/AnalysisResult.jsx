@@ -1,22 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Flame, Beef, Droplet, Wheat, ArrowLeft, Volume2, Leaf } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { analyzeImage } from '../services/ai';
+import { db } from '../services/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 import '../styles/index.css';
 
 const AnalysisResult = ({ image, onClose, userDiet = 'none' }) => {
     const { t, language } = useLanguage();
+    const { user, isDemoMode } = useAuth();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
+    const hasSavedInfo = useRef(false);
 
     useEffect(() => {
         const processImage = async () => {
-            const result = await analyzeImage(image, language, userDiet);
-            setData(result);
-            setLoading(false);
+            try {
+                const result = await analyzeImage(image, language, userDiet);
+                setData(result);
+                setLoading(false);
+
+                // Save to history securely, avoiding duplicate saves in React Strict Mode
+                if (!hasSavedInfo.current && result && result.isFood !== false && user && !isDemoMode) {
+                    hasSavedInfo.current = true;
+                    try {
+                        await addDoc(collection(db, "scans"), {
+                            userId: user.uid,
+                            foodName: result.foodName,
+                            calories: result.calories,
+                            protein: result.protein,
+                            carbs: result.carbs,
+                            fat: result.fat,
+                            healthScore: result.healthScore,
+                            createdAt: new Date()
+                        });
+                    } catch (e) {
+                        console.error("Failed to save scan to history", e);
+                    }
+                }
+            } catch (err) {
+                console.error("Analysis Error:", err);
+                setLoading(false);
+            }
         };
         processImage();
-    }, [image, language]);
+    }, [image, language, userDiet, user, isDemoMode]);
 
     if (loading) {
         return (
@@ -92,7 +121,7 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none' }) => {
                         )}
                     </div>
 
-                    <div style={{ width: '100%', height: '10px', background: '#333', borderRadius: '5px', borderRadius: '5px', overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: '10px', background: '#333', borderRadius: '5px', overflow: 'hidden' }}>
                         <div style={{ width: `${data.healthScore}%`, height: '100%', background: 'var(--bro-green)' }}></div>
                     </div>
                     <p style={{ textAlign: 'right', marginTop: '5px', color: 'var(--bro-green)' }}>{data.healthScore}/100</p>

@@ -6,13 +6,16 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import '../styles/index.css';
 
 const History = ({ onClose }) => {
-    const { user } = useAuth();
+    const { user, isDemoMode } = useAuth();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!user) return;
+            if (!user || isDemoMode) {
+                setLoading(false);
+                return;
+            }
             try {
                 // Assuming we save scans to a 'scans' collection
                 // Since we haven't implemented saving yet, this will be empty but functional
@@ -27,12 +30,13 @@ const History = ({ onClose }) => {
                 setHistory(scans);
             } catch (err) {
                 console.error("Error fetching history:", err);
+                setHistory([]); // Ensure empty state is shown on error
             } finally {
                 setLoading(false);
             }
         };
         fetchHistory();
-    }, [user]);
+    }, [user, isDemoMode]);
 
     return (
         <div className="full-screen" style={{ background: '#0a0a0a', padding: '20px', overflowY: 'auto' }}>
