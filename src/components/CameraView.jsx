@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Camera, RefreshCw, Zap, Clock, Share2, Settings, Flame } from 'lucide-react';
+import { Camera, RefreshCw, Zap, Clock, Share2, Settings, Flame, Trophy } from 'lucide-react';
 import '../styles/index.css';
 
-const CameraView = ({ onCapture, onHistory, onShare, onProfile }) => {
+const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard }) => {
     const { streak } = useAuth();
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -107,6 +107,9 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile }) => {
                 </button>
                 <button onClick={onProfile} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Settings size={24} />
+                </button>
+                <button onClick={onLeaderboard} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Trophy size={24} color="#00ff88" />
                 </button>
             </div>
 

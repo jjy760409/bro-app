@@ -7,6 +7,7 @@ import Login from './components/Login';
 import History from './components/History';
 import Share from './components/Share';
 import DietaryProfile from './components/DietaryProfile';
+import Leaderboard from './components/Leaderboard';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -25,7 +26,11 @@ function AppContent() {
     if (user) {
       const storedAcceptance = localStorage.getItem('bro_legal_accepted');
       if (storedAcceptance === 'true') {
-        setView('camera');
+        if (scansLeft > 0) {
+          setView('camera');
+        } else {
+          setView('paywall');
+        }
       } else {
         setView('legal'); // After login, check legal
       }
@@ -50,7 +55,11 @@ function AppContent() {
   }, [user]);
 
   const handleLegalAccepted = () => {
-    setView('camera');
+    if (scansLeft > 0) {
+      setView('camera');
+    } else {
+      setView('paywall');
+    }
   };
 
   const handleCapture = (imageSrc) => {
@@ -63,7 +72,6 @@ function AppContent() {
 
   const handleAnalysisComplete = () => {
     if (scansLeft > 0) {
-      decrementScans(); // Sync with Firebase
       setView('camera');
     } else {
       setView('paywall');
@@ -87,6 +95,7 @@ function AppContent() {
           onHistory={() => setView('history')}
           onShare={() => setView('share')}
           onProfile={() => setView('profile')}
+          onLeaderboard={() => setView('leaderboard')}
         />
       )}
 
@@ -112,6 +121,10 @@ function AppContent() {
 
       {view === 'profile' && (
         <DietaryProfile onClose={() => setView('camera')} />
+      )}
+
+      {view === 'leaderboard' && (
+        <Leaderboard onClose={() => setView('camera')} />
       )}
     </div>
   );

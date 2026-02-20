@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BroApp Competitive Leaderboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00ff88",
+                        "background-light": "#f5f8f7",
+                        "background-dark": "#0a0a0a",
+                        "glass-bg": "rgba(20, 20, 20, 0.7)",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            border: 1px solid rgba(0, 255, 136, 0.5);
+        }
+        body {
+            background-color: #0a0a0a;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display text-slate-100 antialiased">
+<div class="relative flex min-h-screen w-full flex-col bg-background-dark overflow-x-hidden max-w-[430px] mx-auto shadow-2xl border-x border-white/5">
+<!-- Header -->
+<header class="flex items-center justify-between px-6 pt-12 pb-6 sticky top-0 bg-background-dark/80 backdrop-blur-md z-50">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-white">chevron_left</span>
+</button>
+<h1 class="text-white text-lg font-bold tracking-widest uppercase">Leaderboard</h1>
+<div class="size-10 flex items-center justify-end">
+<span class="material-symbols-outlined text-primary">share</span>
+</div>
+</header>
+<!-- User Rank Hero Section -->
+<section class="px-6 mb-8">
+<div class="glass-panel rounded-2xl p-6 flex items-center justify-between overflow-hidden relative">
+<div class="relative z-10">
+<p class="text-slate-400 text-xs font-semibold tracking-wider uppercase mb-1">Your Standing</p>
+<h2 class="text-4xl font-bold text-white tracking-tight">Rank #42</h2>
+<div class="flex items-center gap-2 mt-2">
+<span class="text-primary text-sm font-bold leading-none">+2% this week</span>
+<span class="material-symbols-outlined text-primary text-sm">trending_up</span>
+</div>
+</div>
+<div class="relative z-10 size-16 bg-primary/20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1">trophy</span>
+</div>
+<!-- Abstract Background Detail -->
+<div class="absolute -right-4 -bottom-4 size-32 bg-primary/10 rounded-full blur-3xl"></div>
+</div>
+</section>
+<!-- Leaderboard List -->
+<main class="flex-1 px-6 space-y-3 pb-32">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-white text-sm font-bold tracking-wider uppercase">Top Performers</h3>
+<span class="text-slate-500 text-[10px] font-medium uppercase tracking-widest">Global • Today</span>
+</div>
+<!-- Rank 1: ProteinKing -->
+<div class="glass-panel neon-glow rounded-xl p-4 flex items-center gap-4 group transition-all">
+<div class="flex flex-col items-center justify-center min-w-[24px]">
+<span class="text-primary font-bold text-lg leading-none">1</span>
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1">workspace_premium</span>
+</div>
+<div class="size-12 rounded-full border-2 border-primary p-0.5">
+<div class="size-full rounded-full bg-cover bg-center" data-alt="Portrait of a muscular fitness enthusiast" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBaWXnRls48E2FZMeg5IQamAEvFpW8qyASW3QfcPxFR_O0hBHHax0h1_4fblD_vx3wEgTqoERdUgEdMyQZHP0Rj6ot7yjr3uV2WNmLg_QAYtBHaG-emqy2epDxr91U0T3BrmeUkbYzTZ1ceSXVAf0M_we2Dp3F90I1WummPwFt3KLZyrXirPiQw2xXgvDmQGoGGMbhYCNbEKIbIlRDpwvNAyAr5oH6Ep-p4Y50NhzONHsFjHyYAUiQcgJLacCWYhMa_bCLVW7MwEk')"></div>
+</div>
+<div class="flex-1">
+<p class="text-white font-bold text-base">ProteinKing</p>
+<p class="text-primary/70 text-[10px] font-semibold uppercase tracking-widest">Bro Elite</p>
+</div>
+<div class="text-right">
+<p class="text-primary font-bold text-xl leading-none">98</p>
+<p class="text-slate-500 text-[10px] uppercase font-medium">Health Score</p>
+</div>
+</div>
+<!-- Rank 2: Chad123 -->
+<div class="glass-panel rounded-xl p-4 flex items-center gap-4">
+<div class="flex flex-col items-center justify-center min-w-[24px]">
+<span class="text-slate-300 font-bold text-lg leading-none">2</span>
+</div>
+<div class="size-12 rounded-full border border-white/10 p-0.5">
+<div class="size-full rounded-full bg-cover bg-center grayscale" data-alt="Profile picture of a focused athlete" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCRaEYbGf3MsQqYaZGp_o-_6xkXwy5XMas61a_cnDhlx2hEkeVYP9DxZnks5HkNkyoFp9YnPA7YzL1G_k1cHe3DU6tJXjQZlaLT9lx4mSjmTmVy5qLmTJAnXJxy77xqZExoA7sCeLK_MopTgmJpoqqekDTvOpd3ZVeKxF08hjEW7zIRz0igqpTfMgYBq1nwG5MhMLvcGzPz1RuxfrLVj565UnathtwMmrAxeQmOT3rCnbazt9EhHse0NZf2ZYpVmlcAhM-daQd1D8s')"></div>
+</div>
+<div class="flex-1">
+<p class="text-white font-bold text-base">Chad123</p>
+<p class="text-slate-500 text-[10px] font-semibold uppercase tracking-widest">Power User</p>
+</div>
+<div class="text-right">
+<p class="text-white font-bold text-lg leading-none">95</p>
+<p class="text-slate-500 text-[10px] uppercase font-medium">Health Score</p>
+</div>
+</div>
+<!-- Rank 3: FlexMaster -->
+<div class="glass-panel rounded-xl p-4 flex items-center gap-4">
+<div class="flex flex-col items-center justify-center min-w-[24px]">
+<span class="text-slate-300 font-bold text-lg leading-none">3</span>
+</div>
+<div class="size-12 rounded-full border border-white/10 p-0.5">
+<div class="size-full rounded-full bg-cover bg-center grayscale" data-alt="Professional sports avatar placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0YMmGw2dkNxJCAA4elRcwWtw4YMUNnFeZg8YlHIp05T7YpBbc3F_wYTN_o3COYbB5ntp7wQ807SxmytzmZFckpR6GMOFPI7VLBx33pvo70xxtZAy2dZ0kKWrRNmAccZg6vkYO1uxlug0MbD5BlpvybNKhwJ360hezlou81AyPqjNbIx180On0us-IDqYWr3D_qVrH-MqI0i5aIzdG8nXzvBjeSGDMcRnj9hELyzai_1vUKc38VTZjN0IDT-Ywet8MArGKcTIWXgc')"></div>
+</div>
+<div class="flex-1">
+<p class="text-white font-bold text-base">FlexMaster</p>
+<p class="text-slate-500 text-[10px] font-semibold uppercase tracking-widest">Consistent</p>
+</div>
+<div class="text-right">
+<p class="text-white font-bold text-lg leading-none">92</p>
+<p class="text-slate-500 text-[10px] uppercase font-medium">Health Score</p>
+</div>
+</div>
+<!-- Rank 4: IronLift -->
+<div class="glass-panel rounded-xl p-4 flex items-center gap-4">
+<div class="flex flex-col items-center justify-center min-w-[24px]">
+<span class="text-slate-300 font-bold text-lg leading-none">4</span>
+</div>
+<div class="size-12 rounded-full border border-white/10 p-0.5">
+<div class="size-full rounded-full bg-cover bg-center grayscale" data-alt="Minimalist abstract profile icon" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAo2Ho1odL5C-clmA9_1DHRMU6Bv0rpi9AejuEsdBoSwwt7vJFQnBTEVAIUBSZZZQmj9aY2ZnPDCm7_wJHKVUIkuvFOdATaMO5oRcABQq8Ir9kJI3Dxzdd3_s5ra9n0DHZIqf8zXjsUXB8qXzn8topk2HHON388jlieytaeUerHxkAYXicQqtW2isC0WCPc-QZlbbWtmYobhnUFmQ4KWEFe0xW_tFJVUyM-CMIUOhlZY4wbr-Y5k4WkPAuHDTrR4k7GOZqiYc8eHaw')"></div>
+</div>
+<div class="flex-1">
+<p class="text-white font-bold text-base">IronLift</p>
+<p class="text-slate-500 text-[10px] font-semibold uppercase tracking-widest">Rising Star</p>
+</div>
+<div class="text-right">
+<p class="text-white font-bold text-lg leading-none">89</p>
+<p class="text-slate-500 text-[10px] uppercase font-medium">Health Score</p>
+</div>
+</div>
+<!-- Rank 5: GainzTrain -->
+<div class="glass-panel rounded-xl p-4 flex items-center gap-4">
+<div class="flex flex-col items-center justify-center min-w-[24px]">
+<span class="text-slate-300 font-bold text-lg leading-none">5</span>
+</div>
+<div class="size-12 rounded-full border border-white/10 p-0.5">
+<div class="size-full rounded-full bg-cover bg-center grayscale" data-alt="Athletic avatar for community profile" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_AYuz_NIzMO7kMdbu_EgxzjBvS3dAx_IaVUqKc2ETHnmUEEeg75Dsikkx4xwp6GrsvlJTxhzDmrMuXjLTsy-MiWs4roEu8YygpqhFSSvvXW6Dz_1tt_is23fEBplbce5nkdl56OryJggUZzZKiH_ChClZHUVZPWAxAgOcgSAzWs_HLZbBRX8cVg7_SKUPDdvf7u-dQUZH0X_4T48oj1Km_i0NCz9EysqiGcWtkMJVatj1FL_QzOIXM2YduP11OhlZzgX5cFUQXn0')"></div>
+</div>
+<div class="flex-1">
+<p class="text-white font-bold text-base">GainzTrain</p>
+<p class="text-slate-500 text-[10px] font-semibold uppercase tracking-widest">Hustler</p>
+</div>
+<div class="text-right">
+<p class="text-white font-bold text-lg leading-none">88</p>
+<p class="text-slate-500 text-[10px] uppercase font-medium">Health Score</p>
+</div>
+</div>
+</main>
+<!-- Bottom Panel Information -->
+<div class="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[382px] z-40">
+<div class="glass-panel rounded-xl p-4 text-center">
+<p class="text-slate-400 text-[11px] leading-relaxed">
+                    Health Score is calculated based on daily streaks, workout intensity, hydration, and sleep quality. Keep grinding to climb the ranks.
+                </p>
+</div>
+</div>
+<!-- Navigation Bar -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] border-t border-white/5 bg-background-dark/95 backdrop-blur-xl px-4 py-3 flex justify-around items-center z-50">
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium uppercase tracking-tighter">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="text-[10px] font-medium uppercase tracking-tighter">Workouts</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">leaderboard</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Leaderboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium uppercase tracking-tighter">Profile</span>
+</a>
+</nav>
+</div>
+</body></html>

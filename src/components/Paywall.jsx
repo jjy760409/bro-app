@@ -34,7 +34,7 @@ const Paywall = ({ onSuccess, onClose }) => {
     }, [user]);
 
     const initialOptions = {
-        "client-id": "test",
+        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || "test",
         currency: "USD",
         intent: "subscription",
         vault: true,

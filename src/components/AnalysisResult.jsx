@@ -9,7 +9,7 @@ import '../styles/index.css';
 
 const AnalysisResult = ({ image, onClose, userDiet = 'none' }) => {
     const { t, language } = useLanguage();
-    const { user } = useAuth();
+    const { user, decrementScans } = useAuth();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const hasSavedInfo = useRef(false);
@@ -24,6 +24,7 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none' }) => {
                 // Save to history securely, avoiding duplicate saves in React Strict Mode
                 if (!hasSavedInfo.current && result && result.isFood !== false && user) {
                     hasSavedInfo.current = true;
+                    decrementScans(); // Consume use immediately upon successful analysis
                     try {
                         await addDoc(collection(db, "scans"), {
                             userId: user.uid,
@@ -45,7 +46,7 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none' }) => {
             }
         };
         processImage();
-    }, [image, language, userDiet, user]);
+    }, [image, language, userDiet, user, decrementScans]);
 
     if (loading) {
         return (
