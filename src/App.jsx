@@ -23,7 +23,12 @@ function AppContent() {
   // Effect to separate Login vs Legal flow & Fetch Profile
   useEffect(() => {
     if (user) {
-      setView('legal'); // After login, check legal
+      const storedAcceptance = localStorage.getItem('bro_legal_accepted');
+      if (storedAcceptance === 'true') {
+        setView('camera');
+      } else {
+        setView('legal'); // After login, check legal
+      }
 
       // Fetch user profile for diet
       setLoadingProfile(true);
