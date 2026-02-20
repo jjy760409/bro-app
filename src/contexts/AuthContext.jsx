@@ -12,17 +12,10 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [scansLeft, setScansLeft] = useState(3);
     const [streak, setStreak] = useState(0);
-    const [isDemoMode, setIsDemoMode] = useState(false);
 
     useEffect(() => {
-        // Check if Firebase is configured
+        // Init Firebase Auth Listener
         try {
-            if (!auth || !auth.app.options.apiKey || auth.app.options.apiKey === "YOUR_FIREBASE_API_KEY") {
-                console.warn("Firebase not configured. Using Demo Mode.");
-                setIsDemoMode(true);
-                setLoading(false);
-                return;
-            }
 
             const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                 setUser(currentUser);
@@ -83,20 +76,11 @@ export const AuthProvider = ({ children }) => {
             return unsubscribe;
         } catch (err) {
             console.error("Auth Init Error:", err);
-            setIsDemoMode(true);
             setLoading(false);
         }
     }, []);
 
     const login = async () => {
-        if (isDemoMode) {
-            // Mock Login
-            const mockUser = { uid: "demo-user", email: "demo@broapp.com", displayName: "Demo Bro" };
-            setUser(mockUser);
-            setScansLeft(3); // Reset local scans for demo
-            alert("Running in DEMO MODE. No real authentication used.");
-            return;
-        }
 
         try {
             await signInWithPopup(auth, googleProvider);
@@ -108,17 +92,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        if (isDemoMode) {
-            setUser(null);
-            return;
-        }
         await signOut(auth);
     };
 
     const decrementScans = async () => {
         setScansLeft(prev => prev - 1); // Optimistic update
 
-        if (isDemoMode || !user) return;
+        if (!user) return;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -133,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     const setPremium = async (subscriptionId = 'demo-sub') => {
         setScansLeft(999999);
 
-        if (isDemoMode || !user) return;
+        if (!user) return;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -154,10 +134,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     const cancelSubscription = async () => {
-        if (isDemoMode) {
-            alert("Demo subscription cancelled. Access remains until end of period.");
-            return;
-        }
         if (!user) return;
         try {
             const userRef = doc(db, "users", user.uid);
@@ -171,11 +147,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     const requestRefund = async () => {
-        if (isDemoMode) {
-            alert("Demo refund processed. Premier status revoked.");
-            setScansLeft(0);
-            return;
-        }
         if (!user) return;
         try {
             const userRef = doc(db, "users", user.uid);
@@ -193,7 +164,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading, isDemoMode }}>
+        <AuthContext.Provider value={{ user, login, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading }}>
             {!loading && children}
         </AuthContext.Provider>
     );

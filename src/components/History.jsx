@@ -6,13 +6,13 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import '../styles/index.css';
 
 const History = ({ onClose }) => {
-    const { user, isDemoMode } = useAuth();
+    const { user } = useAuth();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!user || isDemoMode) {
+            if (!user) {
                 setLoading(false);
                 return;
             }

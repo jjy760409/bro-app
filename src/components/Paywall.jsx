@@ -9,17 +9,12 @@ import '../styles/index.css';
 
 const Paywall = ({ onSuccess, onClose }) => {
     const { t } = useLanguage();
-    const { user, setPremium, cancelSubscription, requestRefund, isDemoMode } = useAuth();
+    const { user, setPremium, cancelSubscription, requestRefund } = useAuth();
     const [status, setStatus] = useState('loading'); // loading, active, none
     const [subDetails, setSubDetails] = useState(null);
 
     useEffect(() => {
         const checkStatus = async () => {
-            if (isDemoMode) {
-                setStatus('none');
-                // Simple demo toggle logic could act here, but simplifying for now
-                return;
-            }
             if (user) {
                 const snap = await getDoc(doc(db, "users", user.uid));
                 if (snap.exists()) {
@@ -31,10 +26,12 @@ const Paywall = ({ onSuccess, onClose }) => {
                         setStatus('none');
                     }
                 }
+            } else {
+                setStatus('none');
             }
         };
         checkStatus();
-    }, [user, isDemoMode]);
+    }, [user]);
 
     const initialOptions = {
         "client-id": "test",

@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Leaf, Ban, Globe } from 'lucide-react';
 import '../styles/index.css';
 
 const DietaryProfile = ({ onClose }) => {
-    const { user, isDemoMode } = useAuth();
+    const { user } = useAuth();
     const { language, setLanguage } = useLanguage();
     const [diet, setDiet] = useState('none');
     const [allergies, setAllergies] = useState('');
@@ -15,7 +15,7 @@ const DietaryProfile = ({ onClose }) => {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            if (user && !isDemoMode) {
+            if (user) {
                 const docRef = doc(db, "users", user.uid);
                 const snap = await getDoc(docRef);
                 if (snap.exists()) {
@@ -26,10 +26,10 @@ const DietaryProfile = ({ onClose }) => {
             setLoading(false);
         };
         fetchProfile();
-    }, [user, isDemoMode]);
+    }, [user]);
 
     const handleSave = async () => {
-        if (user && !isDemoMode) {
+        if (user) {
             const docRef = doc(db, "users", user.uid);
             await updateDoc(docRef, {
                 diet: diet,
