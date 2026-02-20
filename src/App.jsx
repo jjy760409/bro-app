@@ -74,7 +74,7 @@ function AppContent() {
     <div className="app-container">
       {view === 'login' && <Login />}
 
-      {view === 'legal' && <LegalCenter onAccept={handleLegalAccepted} />}
+      {view === 'legal' && <LegalCenter onClose={handleLegalAccepted} />}
 
       {view === 'camera' && (
         <CameraView

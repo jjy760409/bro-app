@@ -26,8 +26,10 @@ export const AuthProvider = ({ children }) => {
 
             const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                 setUser(currentUser);
+                setLoading(false); // Unblock rendering immediately
+
                 if (currentUser) {
-                    // Sync with Firestore
+                    // Sync with Firestore asynchronously
                     const userRef = doc(db, "users", currentUser.uid);
                     try {
                         const userSnap = await getDoc(userRef);
@@ -77,7 +79,6 @@ export const AuthProvider = ({ children }) => {
                         setScansLeft(3);
                     }
                 }
-                setLoading(false);
             });
             return unsubscribe;
         } catch (err) {
