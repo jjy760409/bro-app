@@ -81,13 +81,20 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async () => {
-
         try {
             await signInWithPopup(auth, googleProvider);
         } catch (error) {
             console.error("Login failed", error);
+            // Ignore intentional user cancellations to prevent annoying alerts
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                console.log("User closed the popup or cancelled the request.");
+                return;
+            }
+            if(error.code === 'auth/unauthorized-domain') {
+                 alert("Login failed: Unauthorized domain.\n\n(Tip: Please add smartcal-ai.com to your Firebase Console -> Authentication -> Settings -> Authorized domains!)");
+                 return;
+            }
             alert("Login failed: " + error.message + "\n\n(Tip: Check console for full error. If you haven't set up Firebase, this is expected!)");
-            // Optional: Ask if they want to switch to demo mode?
         }
     };
 

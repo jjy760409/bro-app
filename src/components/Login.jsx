@@ -5,6 +5,16 @@ import '../styles/index.css';
 
 const Login = () => {
     const { login } = useAuth();
+    const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+
+    const handleLogin = async () => {
+        setIsLoggingIn(true);
+        try {
+            await login();
+        } finally {
+            setIsLoggingIn(false);
+        }
+    };
 
     return (
         <div className="full-screen flex-center" style={{ flexDirection: 'column', background: '#0a0a0a', padding: '30px' }}>
@@ -15,18 +25,21 @@ const Login = () => {
 
             <button
                 className="btn-primary"
-                onClick={login}
+                onClick={handleLogin}
+                disabled={isLoggingIn}
                 style={{
                     background: 'white',
                     color: '#333',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
-                    padding: '15px 30px'
+                    padding: '15px 30px',
+                    opacity: isLoggingIn ? 0.7 : 1,
+                    cursor: isLoggingIn ? 'not-allowed' : 'pointer'
                 }}
             >
                 <Chrome size={24} />
-                Sign in with Google
+                {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
             </button>
 
             <p style={{ marginTop: '20px', fontSize: '0.8rem', color: '#555' }}>
