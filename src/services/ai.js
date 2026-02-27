@@ -26,15 +26,16 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
             : `briefTip: A short, actionable and polite health tip (in ${language}).`;
 
         const prompt = `
-      You are a strict nutritionist. Analyze this image.
+      You are an expert nutritionist and food analyst. Analyze this image.
       User's Dietary Preference: ${diet.toUpperCase()}.
       
-      First, determine if this is a FOOD item.
+      Determine if this image contains ANYTHING consumable by humans (e.g., meals, snacks, packaged foods, beverages, ingredients, dietary supplements).
+      Be Extremely Lenient: If it looks remotely like food, a drink, or a nutritional item, consider it FOOD.
       
-      If it is NOT food (e.g., a person, car, scenery, random object):
-      Return JSON: { "isFood": false, "reason": "Not a recognizable food item." }
+      If it is absolutely NOT consumable (e.g., a person, car, scenery, furniture, random object with no relation to food):
+      Return JSON: { "isFood": false, "reason": "Not a recognizable consumable item." }
 
-      If it IS food:
+      If it IS consumable:
       Check if it complies with the dietary preference (${diet}).
       If it VIOLATES the diet (e.g., Pork for Halal/Kosher, Meat for Vegan/Vegetarian):
          - Set 'isSafe': false
@@ -43,23 +44,25 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
          - Set 'isSafe': true
          - 'warning': null
 
-      Return JSON with these fields:
-      - isFood: true
-      - foodName: Specific name of the food (in ${language})
+      Provide your best estimate for the nutritional values. If you cannot be entirely sure, make an educated guess based on typical serving sizes for the item shown.
+      
+      Return ONLY valid JSON with these exact keys:
+      - isFood: true (boolean)
+      - foodName: Specific name of the food/drink (in ${language}) (string)
       - calories: Total calories (integer)
       - protein: Protein in grams (integer)
       - carbs: Carbs in grams (integer)
       - fat: Fat in grams (integer)
       - healthScore: 0-100 score (integer)
-      - ${tipInstruction}
+      - ${tipInstruction} (string)
       - confidence: 0-100 score of how sure you are (integer)
       - isSafe: boolean (based on diet)
       - warning: string or null (if diet violated)
       - carbonFootprint: "Low", "Medium", or "High" (string)
-      - sustainabilityTip: Short tip to reduce environmental impact (in ${language})
+      - sustainabilityTip: Short tip to reduce environmental impact (in ${language}) (string)
 
       Language: ${language}
-      Return ONLY raw JSON. No markdown.
+      DO NOT INCLUDE ANY MARKDOWN PRINTS like \`\`\`json. Return ONLY raw JSON text.
     `;
 
         const imagePart = {
@@ -73,11 +76,34 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
         const response = await result.response;
         const text = response.text();
 
-        // Clean up if markdown is included despite "ONLY raw JSON" instruction
-        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = JSON.parse(jsonStr);
+        // Robust JSON Parsing
+        let jsonStr = text.trim();
+        // aggressively strip markdown if the model hallucinated it
+        if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```json/i, '').replace(/^```/, '');
+        }
+        if (jsonStr.endsWith('```')) {
+            jsonStr = jsonStr.replace(/```$/, '');
+        }
+        jsonStr = jsonStr.trim();
 
-        return data;
+        try {
+            const data = JSON.parse(jsonStr);
+            // Ensure essential fields exist even if AI hallucinated
+            if (data.isFood !== false) {
+                data.calories = data.calories || 0;
+                data.protein = data.protein || 0;
+                data.carbs = data.carbs || 0;
+                data.fat = data.fat || 0;
+                data.healthScore = data.healthScore || 50;
+                data.foodName = data.foodName || (language === 'ko' ? '알 수 없는 부분 인식됨' : 'Partially Recognized Item');
+            }
+            return data;
+        } catch (parseError) {
+            console.error("Failed to parse Gemini JSON:", jsonStr);
+            console.error(parseError);
+            return { isFood: false, reason: "Analysis succeeded but data format was unreadable. Please try again." };
+        }
 
     } catch (error) {
         console.error("Gemini Analysis Error details:", error);

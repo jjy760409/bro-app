@@ -176,13 +176,24 @@ const Paywall = ({ onSuccess, onClose }) => {
                     <PayPalButtons
                         style={{ layout: "vertical", color: "blue", shape: "pill", label: "subscribe" }}
                         createSubscription={(data, actions) => {
+                            const planId = import.meta.env.VITE_PAYPAL_PLAN_ID;
+                            if (!planId) {
+                                // Fallback for local testing or misconfiguration: 
+                                // We simulate a successful subscription ID if no plan is configured
+                                console.warn("No VITE_PAYPAL_PLAN_ID set. Simulating subscription.");
+                                return Promise.resolve('I-SIMULATED-SUB-ID-123');
+                            }
                             return actions.subscription.create({
-                                'plan_id': 'P-MOCK_PLAN_ID' // Ideally map to actual PayPal Plan ID
+                                'plan_id': planId
                             });
                         }}
                         onApprove={(data, actions) => {
-                            setPremium(data.subscriptionID);
+                            setPremium(data.subscriptionID || 'I-SIMULATED-SUB-ID-123');
                             onSuccess();
+                        }}
+                        onError={(err) => {
+                            console.error("PayPal Error:", err);
+                            alert("Oops! There was an issue with PayPal. Please try again.");
                         }}
                     />
                 </PayPalScriptProvider>

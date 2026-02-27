@@ -62,10 +62,8 @@ function AppContent() {
 
   const handleCapture = (imageSrc) => {
     setCapturedImage(imageSrc);
-    // Mimic processing delay then show analysis
-    setTimeout(() => {
-      setView('analysis');
-    }, 500);
+    // Remove artificial delay to show AnalysisResult and its loading spinner instantly
+    setView('analysis');
   };
 
   const handleAnalysisComplete = () => {
