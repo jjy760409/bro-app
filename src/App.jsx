@@ -15,13 +15,11 @@ function AppContent() {
   const { user, scansLeft, decrementScans, setPremium } = useAuth();
   const [view, setView] = useState('login'); // Start with login
   const [capturedImage, setCapturedImage] = useState(null);
-  const [userDiet, setUserDiet] = useState('none'); // Store user diet preference
+  const [userDiet, setUserDiet] = useState('none');
+  const [isRoastMode, setIsRoastMode] = useState(false); // Global Roast Mode Toggle
 
-  // Import Firestore to fetch diet
-  // The instruction implies dynamic import within useEffect, so no top-level import for db here.
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  // Effect to separate Login vs Legal flow & Fetch Profile
   useEffect(() => {
     if (user) {
       const storedAcceptance = localStorage.getItem('bro_legal_accepted');
@@ -35,7 +33,6 @@ function AppContent() {
         setView('legal'); // After login, check legal
       }
 
-      // Fetch user profile for diet
       setLoadingProfile(true);
       import('./services/firebase').then(async ({ db }) => {
         const { doc, getDoc } = await import('firebase/firestore');
@@ -50,7 +47,8 @@ function AppContent() {
       });
     } else {
       setView('login');
-      setUserDiet('none'); // Reset diet when logged out
+      setUserDiet('none');
+      setIsRoastMode(false);
     }
   }, [user]);
 
@@ -96,6 +94,8 @@ function AppContent() {
           onShare={() => setView('share')}
           onProfile={() => setView('profile')}
           onLeaderboard={() => setView('leaderboard')}
+          isRoastMode={isRoastMode}
+          setIsRoastMode={setIsRoastMode}
         />
       )}
 
@@ -111,7 +111,8 @@ function AppContent() {
         <AnalysisResult
           image={capturedImage}
           onClose={handleAnalysisComplete}
-          userDiet={userDiet} // Pass the diet preference
+          userDiet={userDiet}
+          isRoastMode={isRoastMode}
         />
       )}
 

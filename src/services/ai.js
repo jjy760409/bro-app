@@ -1,22 +1,29 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize with a placeholder or environment variable
-// USER MUST REPLACE THIS
-const API_KEY = "YOUR_GEMINI_API_KEY";
+// Use the environment variable for the real Gemini API Key
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-export const analyzeImage = async (imageBase64, language = 'en', diet = 'none') => {
-    if (API_KEY === "YOUR_GEMINI_API_KEY") {
-        console.warn("Gemini API Key missing. Using mock data.");
+export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', isRoastMode = false) => {
+    if (!API_KEY) {
+        console.warn("Gemini API Key missing (VITE_GEMINI_API_KEY). Using mock data.");
         return mockAnalysis(language);
     }
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // Remove data:image/png;base64, prefix if present
+        // Extract mimeType if present, else default to jpeg since we changed the camera export
+        const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
+        const mimeType = matches ? matches[1] : "image/jpeg";
+
+        // Remove data:image/...;base64, prefix
         const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+        const tipInstruction = isRoastMode
+            ? `briefTip: Instead of a polite health tip, brutally ROAST the user for eating this in ${language}. Use savage, Gen-Z humor. Be funny but mean about its nutritional value.`
+            : `briefTip: A short, actionable and polite health tip (in ${language}).`;
 
         const prompt = `
       You are a strict nutritionist. Analyze this image.
@@ -44,7 +51,7 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none') 
       - carbs: Carbs in grams (integer)
       - fat: Fat in grams (integer)
       - healthScore: 0-100 score (integer)
-      - briefTip: A short, actionable health tip (in ${language})
+      - ${tipInstruction}
       - confidence: 0-100 score of how sure you are (integer)
       - isSafe: boolean (based on diet)
       - warning: string or null (if diet violated)
@@ -58,7 +65,7 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none') 
         const imagePart = {
             inlineData: {
                 data: base64Data,
-                mimeType: "image/png",
+                mimeType: mimeType,
             },
         };
 
@@ -73,8 +80,8 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none') 
         return data;
 
     } catch (error) {
-        console.error("Gemini Analysis Error:", error);
-        return { isFood: false, reason: "Error analyzing image." };
+        console.error("Gemini Analysis Error details:", error);
+        return { isFood: false, reason: "Error analyzing image: " + (error.message || "Unknown error") };
     }
 };
 

@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Camera, RefreshCw, Zap, Clock, Share2, Settings, Flame, Trophy } from 'lucide-react';
+import { Camera, RefreshCw, Zap, Clock, Share2, Settings, Flame, Trophy, AlertTriangle } from 'lucide-react';
 import '../styles/index.css';
 
-const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard }) => {
+const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, isRoastMode, setIsRoastMode }) => {
     const { streak } = useAuth();
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -68,13 +68,33 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard })
         playShutterSound();
 
         if (videoRef.current && canvasRef.current) {
-            const context = canvasRef.current.getContext('2d');
-            const { videoWidth, videoHeight } = videoRef.current;
-            canvasRef.current.width = videoWidth;
-            canvasRef.current.height = videoHeight;
-            context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
 
-            const imageSrc = canvasRef.current.toDataURL('image/png');
+            // Calculate new dimensions (max 800px on longest side)
+            const MAX_DIMENSION = 800;
+            let width = video.videoWidth;
+            let height = video.videoHeight;
+
+            if (width > height) {
+                if (width > MAX_DIMENSION) {
+                    height = Math.round((height * MAX_DIMENSION) / width);
+                    width = MAX_DIMENSION;
+                }
+            } else {
+                if (height > MAX_DIMENSION) {
+                    width = Math.round((width * MAX_DIMENSION) / height);
+                    height = MAX_DIMENSION;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+
+            // Compress to JPEG with 0.8 quality
+            const imageSrc = canvas.toDataURL('image/jpeg', 0.8);
             onCapture(imageSrc);
         }
     };
@@ -91,26 +111,59 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard })
             <canvas ref={canvasRef} style={{ display: 'none' }} />
 
             {/* Overlays */}
-            <div className="scan-overlay full-screen pointer-events-none"></div>
+            <div className="scan-overlay full-screen pointer-events-none" style={{
+                boxShadow: isRoastMode ? 'inset 0 0 100px rgba(255, 50, 50, 0.4)' : 'none',
+                transition: 'box-shadow 0.3s ease'
+            }}></div>
+
+            {isRoastMode && (
+                <div style={{ position: 'absolute', top: '80px', width: '100%', textAlign: 'center', zIndex: 15, pointerEvents: 'none', animation: 'pulse 2s infinite' }}>
+                    <span style={{ background: 'rgba(255,50,50,0.8)', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                        🔥 Roast Mode Active 🔥
+                    </span>
+                </div>
+            )}
 
             {/* Top Controls */}
-            <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 20, display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '8px 12px', borderRadius: '20px', border: '1px solid rgba(255,165,0,0.5)' }}>
-                    <Flame size={20} color="orange" fill="orange" />
-                    <span style={{ color: 'orange', fontWeight: 'bold' }}>{streak}</span>
+            <div style={{ position: 'absolute', top: '20px', width: '100%', px: '20px', zIndex: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px' }}>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '8px 12px', borderRadius: '20px', border: '1px solid rgba(255,165,0,0.5)' }}>
+                        <Flame size={20} color="orange" fill="orange" />
+                        <span style={{ color: 'orange', fontWeight: 'bold' }}>{streak}</span>
+                    </div>
                 </div>
-                <button onClick={onShare} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Share2 size={24} />
-                </button>
-                <button onClick={onHistory} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Clock size={24} />
-                </button>
-                <button onClick={onProfile} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Settings size={24} />
-                </button>
-                <button onClick={onLeaderboard} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Trophy size={24} color="#00ff88" />
-                </button>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                        onClick={() => setIsRoastMode(!isRoastMode)}
+                        style={{
+                            background: isRoastMode ? 'rgba(255,50,50,0.8)' : 'rgba(0,0,0,0.5)',
+                            padding: '10px',
+                            borderRadius: '50%',
+                            color: 'white',
+                            border: isRoastMode ? '2px solid white' : '1px solid rgba(255,255,255,0.2)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        <AlertTriangle size={20} color={isRoastMode ? "white" : "#ff4d4d"} />
+                    </button>
+                    <button onClick={onShare} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Share2 size={24} />
+                    </button>
+                    <button onClick={onHistory} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Clock size={24} />
+                    </button>
+                    <button onClick={onLeaderboard} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Trophy size={24} color="#00ff88" />
+                    </button>
+                    <button onClick={onProfile} style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '50%', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Settings size={24} />
+                    </button>
+                </div>
             </div>
 
             {/* Controls */}
@@ -129,20 +182,28 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard })
                         height: '80px',
                         borderRadius: '50%',
                         backgroundColor: 'transparent',
-                        border: '4px solid white',
+                        border: isRoastMode ? '4px solid #ff4d4d' : '4px solid white',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'border-color 0.3s ease'
                     }}
                 >
-                    <div style={{ width: '70px', height: '70px', borderRadius: '50%', backgroundColor: 'white' }}></div>
+                    <div style={{ width: '70px', height: '70px', borderRadius: '50%', backgroundColor: isRoastMode ? '#ff4d4d' : 'white', transition: 'background-color 0.3s ease' }}></div>
                 </button>
 
                 <button className="glass-panel p-3 rounded-full text-white" onClick={toggleCamera} style={{ padding: '15px' }}>
                     <RefreshCw size={24} />
                 </button>
             </div>
+            <style>{`
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };
