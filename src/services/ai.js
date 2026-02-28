@@ -12,7 +12,7 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         // Extract mimeType if present, else default to jpeg since we changed the camera export
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
