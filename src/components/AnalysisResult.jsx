@@ -1,12 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Flame, Beef, Droplet, Wheat, ArrowLeft, Volume2, Leaf, Instagram, AlertTriangle } from 'lucide-react';
+import { Flame, Beef, Droplet, Wheat, ArrowLeft, Volume2, Leaf, Instagram, AlertTriangle, ScanLine } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { analyzeImage } from '../services/ai';
 import { db } from '../services/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import html2canvas from 'html2canvas';
+import { motion } from 'framer-motion';
 import '../styles/index.css';
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.15, delayChildren: 0.2 }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 120, damping: 12 } }
+};
 
 const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false }) => {
     const { t, language } = useLanguage();
@@ -22,7 +36,8 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
                 // Pass isRoastMode to ai.js
                 const result = await analyzeImage(image, language, userDiet, isRoastMode);
                 setData(result);
-                setLoading(false);
+                // Slight artificial delay just to show off the cool scanning animation for at least 1.5 seconds minimum
+                setTimeout(() => setLoading(false), 1500);
 
                 // Save to history securely, avoiding duplicate saves in React Strict Mode
                 if (!hasSavedInfo.current && result && result.isFood !== false && user) {
@@ -86,16 +101,64 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
 
     if (loading) {
         return (
-            <div className="full-screen flex-center" style={{ flexDirection: 'column', background: 'rgba(0,0,0,0.9)' }}>
-                {isRoastMode ? (
-                    <div className="animate-pulse" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '4px solid #ff4d4d', borderTopColor: 'transparent', animation: 'spin 0.5s linear infinite' }}></div>
-                ) : (
-                    <div className="animate-pulse" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '4px solid var(--bro-green)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}></div>
-                )}
-                <h2 className="mt-4" style={{ marginTop: '20px', color: isRoastMode ? '#ff4d4d' : 'var(--bro-green)' }}>
-                    {isRoastMode ? 'Preparing a brutal roast...' : t('analyzing')}
-                </h2>
-                <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+            <div className="full-screen" style={{ position: 'relative', background: '#000', overflow: 'hidden' }}>
+                {/* Background Image Blurred for context */}
+                <motion.div
+                    initial={{ scale: 1.1, filter: 'blur(0px) brightness(1)' }}
+                    animate={{ scale: 1, filter: 'blur(8px) brightness(0.4)' }}
+                    transition={{ duration: 1 }}
+                    style={{
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                        backgroundImage: `url(${image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                        zIndex: 0
+                    }}
+                />
+
+                {/* AI Scanning overlay text */}
+                <div style={{ position: 'absolute', top: '15%', width: '100%', textAlign: 'center', zIndex: 10 }}>
+                    <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                        <ScanLine size={48} color={isRoastMode ? '#ff4d4d' : '#00ff88'} style={{ margin: '0 auto 15px auto' }} />
+                        <h2 style={{
+                            color: isRoastMode ? '#ff4d4d' : '#00ff88',
+                            letterSpacing: '4px',
+                            textTransform: 'uppercase',
+                            textShadow: isRoastMode ? '0 0 20px rgba(255,77,77,0.8)' : '0 0 20px rgba(0,255,136,0.8)'
+                        }}>
+                            {isRoastMode ? 'AI ROASTING...' : 'AI ANALYZING...'}
+                        </h2>
+                        <p style={{ color: '#fff', fontSize: '1rem', marginTop: '10px', fontFamily: 'monospace', opacity: 0.8 }}>
+                            Extracting real-time nutritional matrix
+                        </p>
+                    </motion.div>
+                </div>
+
+                {/* Laser scan line with glow */}
+                <motion.div
+                    initial={{ top: '-10%' }}
+                    animate={{ top: '110%' }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                    style={{
+                        position: 'absolute',
+                        left: 0,
+                        width: '100%',
+                        height: '20vh',
+                        background: isRoastMode
+                            ? 'linear-gradient(to bottom, transparent, rgba(255,77,77,0.1), rgba(255,77,77,0.6), transparent)'
+                            : 'linear-gradient(to bottom, transparent, rgba(0,255,136,0.1), rgba(0,255,136,0.6), transparent)',
+                        borderBottom: isRoastMode ? '2px solid #ff4d4d' : '2px solid #00ff88',
+                        boxShadow: isRoastMode ? '0 10px 30px #ff4d4d' : '0 10px 30px #00ff88',
+                        zIndex: 5
+                    }}
+                />
+
+                {/* Tech grid overlay */}
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+                    backgroundSize: '30px 30px',
+                    zIndex: 1,
+                    pointerEvents: 'none'
+                }}></div>
             </div>
         );
     }
@@ -103,16 +166,16 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
     // Handle Non-Food output from AI
     if (data && data.isFood === false) {
         return (
-            <div className="full-screen flex-center" style={{ flexDirection: 'column', background: '#0a0a0a', padding: '30px', textAlign: 'center' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🤔</div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="full-screen flex-center" style={{ flexDirection: 'column', background: '#0a0a0a', padding: '30px', textAlign: 'center' }}>
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5 }} style={{ fontSize: '4rem', marginBottom: '20px' }}>🤔</motion.div>
                 <h2 style={{ color: 'var(--bro-error)', marginBottom: '10px' }}>Not Food?</h2>
                 <p style={{ color: '#ccc', marginBottom: '30px' }}>
-                    {data.reason || "We couldn't identify this as food. Please try again."}
+                    {data.reason || "We couldn't identify this as food. Please try it again from a better angle."}
                 </p>
                 <button className="btn-primary" onClick={onClose} style={{ width: '100%', justifyContent: 'center' }}>
                     <ArrowLeft size={20} /> {t('scanMore')}
                 </button>
-            </div>
+            </motion.div>
         );
     }
 
@@ -125,17 +188,22 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
             overflow: 'hidden'
         }}>
             {/* Full Screen Background Image */}
-            <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundImage: `url(${image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                zIndex: 0
-            }}></div>
+            <motion.div
+                initial={{ transform: 'scale(1.1)', filter: 'brightness(0.5) blur(10px)' }}
+                animate={{ transform: 'scale(1)', filter: 'brightness(0.3) blur(0px)' }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundImage: `url(${image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    zIndex: 0
+                }}
+            />
 
             {/* Dark Gradient Overlay for Readability */}
             <div style={{
@@ -144,188 +212,225 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
                 left: 0,
                 width: '100%',
                 height: '100%',
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%)',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.95) 90%, #000 100%)',
                 zIndex: 1
             }}></div>
 
             {/* Scrollable Content Container */}
             <div className="no-scrollbar" style={{ position: 'relative', zIndex: 10, padding: '30px 20px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
 
-                {isRoastMode && (
-                    <div style={{ alignSelf: 'center', background: 'rgba(255,50,50,0.8)', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <AlertTriangle size={16} /> Roast Mode Result
-                    </div>
-                )}
+                <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ width: '100%' }}>
+                    {isRoastMode && (
+                        <motion.div variants={itemVariants} style={{ alignSelf: 'center', background: 'rgba(255,50,50,0.8)', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <AlertTriangle size={16} /> Roast Mode Result
+                        </motion.div>
+                    )}
 
-                <div className="glass-panel" style={{
-                    padding: '25px',
-                    background: 'rgba(20, 20, 20, 0.6)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                    borderRadius: '24px',
-                    border: isRoastMode ? '1px solid rgba(255,50,50,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: isRoastMode ? '0 10px 40px rgba(255,50,50,0.2)' : '0 10px 40px rgba(0,0,0,0.5)'
-                }}>
-                    <h1 style={{ fontSize: '2.2rem', marginBottom: '15px', color: isRoastMode ? '#ff4d4d' : 'var(--bro-green)', textShadow: isRoastMode ? '0 2px 10px rgba(255,50,50,0.3)' : '0 2px 10px rgba(0,255,136,0.3)' }}>{data.foodName}</h1>
+                    <div className="glass-panel" style={{
+                        padding: '25px',
+                        background: 'rgba(10, 10, 10, 0.65)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        borderRadius: '28px',
+                        border: isRoastMode ? '1px solid rgba(255,50,50,0.4)' : '1px solid rgba(255,255,255,0.15)',
+                        boxShadow: isRoastMode ? '0 20px 50px rgba(255,50,50,0.3)' : '0 20px 50px rgba(0,0,0,0.6)'
+                    }}>
+                        <motion.h1 variants={itemVariants} style={{ fontSize: '2.4rem', marginBottom: '20px', color: isRoastMode ? '#ff4d4d' : '#00ff88', textShadow: isRoastMode ? '0 2px 15px rgba(255,50,50,0.5)' : '0 2px 15px rgba(0,255,136,0.4)', fontWeight: '900', letterSpacing: '-0.5px' }}>
+                            {data.foodName}
+                        </motion.h1>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                        <NutrientCard icon={<Flame color="#ff4d4d" />} label={t('calories')} value={data.calories} unit="kcal" />
-                        <NutrientCard icon={<Beef color="#ffaa00" />} label={t('protein')} value={data.protein} unit="g" />
-                        <NutrientCard icon={<Wheat color="#d4d400" />} label={t('carbs')} value={data.carbs} unit="g" />
-                        <NutrientCard icon={<Droplet color="#00aaff" />} label={t('fat')} value={data.fat} unit="g" />
-                    </div>
+                        <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '24px' }}>
+                            <NutrientCard icon={<Flame color="#ff4d4d" />} label={t('calories')} value={data.calories} unit="kcal" delay={0.1} />
+                            <NutrientCard icon={<Beef color="#ffaa00" />} label={t('protein')} value={data.protein} unit="g" delay={0.2} />
+                            <NutrientCard icon={<Wheat color="#d4d400" />} label={t('carbs')} value={data.carbs} unit="g" delay={0.3} />
+                            <NutrientCard icon={<Droplet color="#00aaff" />} label={t('fat')} value={data.fat} unit="g" delay={0.4} />
+                        </motion.div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '16px', padding: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        {/* Dietary Warning */}
-                        {data.isSafe === false && (
-                            <div style={{
-                                background: 'rgba(239, 68, 68, 0.2)',
-                                border: '1px solid rgba(239, 68, 68, 0.5)',
-                                borderRadius: '12px',
-                                padding: '12px',
-                                marginBottom: '15px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px'
-                            }}>
-                                <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-                                <div>
-                                    <strong style={{ color: '#ef4444', display: 'block' }}>Dietary Warning</strong>
-                                    <span style={{ color: '#fca5a5', fontSize: '0.9rem' }}>{data.warning}</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Eco-Scan & Health Score */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <h3 style={{ color: 'white', fontSize: '1.1rem' }}>{t('healthScore')}</h3>
-                            {data.carbonFootprint && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(255,255,255,0.1)', padding: '5px 12px', borderRadius: '20px' }}>
-                                    <Leaf size={14} color={data.carbonFootprint === 'Low' ? '#4ade80' : data.carbonFootprint === 'Medium' ? '#facc15' : '#ef4444'} />
-                                    <span style={{ fontSize: '0.8rem', color: '#eee', fontWeight: 'bold' }}>Eco: {data.carbonFootprint}</span>
-                                </div>
+                        <motion.div variants={itemVariants} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '20px', padding: '20px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            {/* Dietary Warning */}
+                            {data.isSafe === false && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ type: 'spring' }}
+                                    style={{
+                                        background: 'rgba(239, 68, 68, 0.15)',
+                                        border: '1px solid rgba(239, 68, 68, 0.6)',
+                                        borderRadius: '16px',
+                                        padding: '16px',
+                                        marginBottom: '20px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'
+                                    }}>
+                                    <span style={{ fontSize: '1.8rem' }}>⚠️</span>
+                                    <div>
+                                        <strong style={{ color: '#ef4444', display: 'block', fontSize: '1.1rem' }}>Dietary Warning</strong>
+                                        <span style={{ color: '#fca5a5', fontSize: '0.95rem' }}>{data.warning}</span>
+                                    </div>
+                                </motion.div>
                             )}
-                        </div>
 
-                        <div style={{ width: '100%', height: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.3)' }}>
-                            <div style={{ width: `${data.healthScore}%`, height: '100%', background: 'linear-gradient(90deg, #00b09b, var(--bro-green))', boxShadow: '0 0 10px var(--bro-green)' }}></div>
-                        </div>
-                        <p style={{ textAlign: 'right', marginTop: '5px', color: 'var(--bro-green)', fontWeight: 'bold', fontSize: '1.1rem' }}>{data.healthScore}/100</p>
+                            {/* Eco-Scan & Health Score */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('healthScore')}</h3>
+                                {data.carbonFootprint && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <Leaf size={16} color={data.carbonFootprint === 'Low' ? '#4ade80' : data.carbonFootprint === 'Medium' ? '#facc15' : '#ef4444'} />
+                                        <span style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 'bold', letterSpacing: '0.5px' }}>Eco: {data.carbonFootprint}</span>
+                                    </div>
+                                )}
+                            </div>
 
-                        <p style={{
-                            marginTop: '10px',
-                            fontSize: '0.95rem',
-                            color: isRoastMode ? '#ffb3b3' : '#ddd',
-                            fontStyle: 'italic',
-                            borderTop: '1px solid rgba(255,255,255,0.1)',
-                            paddingTop: '10px',
-                            lineHeight: '1.5',
-                            fontWeight: isRoastMode ? 'bold' : 'normal'
-                        }}>
-                            {isRoastMode ? '🔥 ' : '💡 '}
-                            {data.briefTip}
-                        </p>
-                        {data.sustainabilityTip && <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#aaa', fontStyle: 'italic', lineHeight: '1.4' }}>🌿 {data.sustainabilityTip}</p>}
+                            <div style={{ width: '100%', height: '16px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.5)', position: 'relative' }}>
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: \`\${data.healthScore}%\` }}
+                                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                                style={{
+                                    height: '100%',
+                                    background: isRoastMode ? 'linear-gradient(90deg, #880000, #ff4d4d)' : 'linear-gradient(90deg, #005544, #00ff88)',
+                                    boxShadow: isRoastMode ? '0 0 15px #ff4d4d' : '0 0 15px #00ff88'
+                                }}
+                                />
+                            </div>
+                            <p style={{ textAlign: 'right', marginTop: '8px', color: isRoastMode ? '#ff4d4d' : '#00ff88', fontWeight: '900', fontSize: '1.3rem' }}>{data.healthScore}<span style={{ fontSize: '0.9rem', color: '#888' }}>/100</span></p>
 
-                        {/* Voice Coach Button */}
-                        <button
-                            data-html2canvas-ignore // Don't include this in the screenshot
-                            onClick={() => {
-                                const text = `${data.foodName}. ${data.calories} calories. ${data.briefTip}`;
-                                const utterance = new SpeechSynthesisUtterance(text);
-                                if (language === 'ko') utterance.lang = 'ko-KR';
-                                else if (language === 'ja') utterance.lang = 'ja-JP';
-                                else if (language === 'es') utterance.lang = 'es-ES';
-                                else if (language === 'fr') utterance.lang = 'fr-FR';
-                                else if (language === 'zh') utterance.lang = 'zh-CN';
-                                else utterance.lang = 'en-US';
+                            <motion.p
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 1 }}
+                                style={{
+                                    marginTop: '15px',
+                                    fontSize: '1.05rem',
+                                    color: isRoastMode ? '#ffcccc' : '#f0f0f0',
+                                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                                    paddingTop: '15px',
+                                    lineHeight: '1.6',
+                                    fontWeight: isRoastMode ? 'bold' : '500'
+                                }}>
+                                {isRoastMode ? '🔥 ' : '💡 '}
+                                {data.briefTip}
+                            </motion.p>
+                            {data.sustainabilityTip && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} style={{ marginTop: '10px', fontSize: '0.95rem', color: '#aaa', fontStyle: 'italic', lineHeight: '1.5' }}>🌿 {data.sustainabilityTip}</motion.p>}
 
-                                window.speechSynthesis.cancel();
-                                window.speechSynthesis.speak(utterance);
-                            }}
+                            {/* Voice Coach Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
+                                whileTap={{ scale: 0.98 }}
+                                data-html2canvas-ignore
+                                onClick={() => {
+                                    const text = \`\${data.foodName}. \${data.calories} calories. \${data.briefTip}\`;
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            if (language === 'ko') utterance.lang = 'ko-KR';
+                            else if (language === 'ja') utterance.lang = 'ja-JP';
+                            else if (language === 'es') utterance.lang = 'es-ES';
+                            else if (language === 'fr') utterance.lang = 'fr-FR';
+                            else if (language === 'zh') utterance.lang = 'zh-CN';
+                            else utterance.lang = 'en-US';
+
+                            window.speechSynthesis.cancel();
+                            window.speechSynthesis.speak(utterance);
+                                }}
                             style={{
-                                marginTop: '20px',
+                                marginTop: '25px',
                                 background: 'rgba(255,255,255,0.1)',
                                 border: '1px solid rgba(255,255,255,0.2)',
                                 color: 'white',
-                                padding: '12px',
-                                borderRadius: '12px',
+                                padding: '16px',
+                                borderRadius: '16px',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '10px',
+                                gap: '12px',
                                 width: '100%',
-                                transition: 'all 0.3s ease'
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold',
+                                boxShadow: '0 5px 15px rgba(0,0,0,0.2)'
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                        >
-                            <Volume2 size={20} /> Listen to {isRoastMode ? 'Roast' : 'Analysis'}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Share and Back Buttons (Not included in screenshot if we wanted, but we might want them. Actually, let's ignore them from canvas) */}
-                <div data-html2canvas-ignore style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                    <button onClick={handleShareInstagram} style={{
-                        flex: 1,
-                        background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                        color: 'white',
-                        fontSize: '1.05rem',
-                        fontWeight: 'bold',
-                        padding: '16px',
-                        borderRadius: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        border: 'none',
-                        boxShadow: '0 4px 15px rgba(220, 39, 67, 0.4)',
-                        cursor: 'pointer'
-                    }}>
-                        <Instagram size={22} /> Insta Share
-                    </button>
-
-                    <button className="btn-primary" onClick={onClose} style={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        background: 'white',
-                        color: '#0a0a0a',
-                        fontSize: '1.05rem',
-                        padding: '16px',
-                        borderRadius: '16px',
-                        boxShadow: '0 4px 15px rgba(255,255,255,0.2)',
-                        border: 'none'
-                    }}>
-                        <ArrowLeft size={22} /> {t('scanMore')}
-                    </button>
-                </div>
+                            >
+                            <Volume2 size={22} /> Listen to {isRoastMode ? 'Roast' : 'Analysis'}
+                        </motion.button>
+                </motion.div>
             </div>
-            {/* Added for html2canvas ignoring elements */}
-            <style>{`
+
+            {/* Share and Back Buttons */}
+            <motion.div variants={itemVariants} data-html2canvas-ignore style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
+                <button onClick={handleShareInstagram} style={{
+                    flex: 1,
+                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    padding: '18px',
+                    borderRadius: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    border: 'none',
+                    boxShadow: '0 8px 25px rgba(220, 39, 67, 0.4)',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s'
+                }}
+                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    <Instagram size={24} /> Insta Share
+                </button>
+
+                <button onClick={onClose} style={{
+                    flex: 1,
+                    background: 'white',
+                    color: '#0a0a0a',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    padding: '18px',
+                    borderRadius: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    border: 'none',
+                    boxShadow: '0 8px 25px rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s'
+                }}
+                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    <ArrowLeft size={24} /> {t('scanMore')}
+                </button>
+            </motion.div>
+        </motion.div>
+            </div >
+    <style>{`
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
-        </div>
+        </div >
     );
 };
 
-const NutrientCard = ({ icon, label, value, unit }) => (
-    <div style={{
-        background: 'rgba(0,0,0,0.5)',
-        padding: '12px',
-        borderRadius: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8px',
-        border: '1px solid rgba(255,255,255,0.05)'
-    }}>
+const NutrientCard = ({ icon, label, value, unit, delay }) => (
+    <motion.div
+        whileHover={{ scale: 1.05 }}
+        style={{
+            background: 'rgba(0,0,0,0.6)',
+            padding: '16px',
+            borderRadius: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: 'inset 0 0 20px rgba(255,255,255,0.02)'
+        }}
+    >
         {icon}
-        <span style={{ fontSize: '0.85rem', color: '#aaa', fontWeight: '500' }}>{label}</span>
-        <span style={{ fontSize: '1.3rem', fontWeight: '900', color: 'white' }}>{value}<span style={{ fontSize: '0.9rem', color: '#888', marginLeft: '2px' }}>{unit}</span></span>
-    </div>
+        <span style={{ fontSize: '0.9rem', color: '#bbb', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</span>
+        <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'white' }}>
+            {value}<span style={{ fontSize: '1rem', color: '#888', marginLeft: '3px', fontWeight: '600' }}>{unit}</span>
+        </span>
+    </motion.div>
 );
 
 export default AnalysisResult;
