@@ -86,6 +86,10 @@ function AppContent() {
 
       {view === 'legal' && <LegalCenter onClose={handleLegalAccepted} />}
 
+      {view === 'dashboard' && (
+        <Dashboard onStartScan={() => setView('camera')} />
+      )}
+
       {view === 'camera' && (
         <CameraView
           onCapture={handleCapture}
