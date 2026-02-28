@@ -60,6 +60,7 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
       - warning: string or null (if diet violated)
       - carbonFootprint: "Low", "Medium", or "High" (string)
       - sustainabilityTip: Short tip to reduce environmental impact (in ${language}) (string)
+      - nextActionTip: Proactive, actionable advice on what the user should DO NEXT based on this food. For example, "Drink a glass of water to flush out sodium" or "Take a 15-minute walk to manage blood sugar." Make it short, punchy, and sound like a helpful navigator (in ${language}) (string)
 
       Language: ${language}
       DO NOT INCLUDE ANY MARKDOWN PRINTS like \`\`\`json. Return ONLY raw JSON text.

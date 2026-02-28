@@ -4,6 +4,7 @@ import AnalysisResult from './components/AnalysisResult';
 import Paywall from './components/Paywall';
 import LegalCenter from './components/LegalCenter';
 import Login from './components/Login';
+import Dashboard from './components/Dashboard'; // NEW Home Screen
 import History from './components/History';
 import Share from './components/Share';
 import DietaryProfile from './components/DietaryProfile';
@@ -25,7 +26,7 @@ function AppContent() {
       const storedAcceptance = localStorage.getItem('bro_legal_accepted');
       if (storedAcceptance === 'true') {
         if (scansLeft > 0) {
-          setView('camera');
+          setView('dashboard'); // Route to Dashboard instead of camera
         } else {
           setView('paywall');
         }

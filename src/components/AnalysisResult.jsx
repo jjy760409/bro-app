@@ -284,13 +284,13 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
                             <div style={{ width: '100%', height: '16px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.5)', position: 'relative' }}>
                                 <motion.div
                                     initial={{ width: 0 }}
-                                    animate={{ width: \`\${data.healthScore}%\` }}
-                                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                                style={{
-                                    height: '100%',
-                                    background: isRoastMode ? 'linear-gradient(90deg, #880000, #ff4d4d)' : 'linear-gradient(90deg, #005544, #00ff88)',
-                                    boxShadow: isRoastMode ? '0 0 15px #ff4d4d' : '0 0 15px #00ff88'
-                                }}
+                                    animate={{ width: `${data.healthScore}%` }}
+                                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                                    style={{
+                                        height: '100%',
+                                        background: isRoastMode ? 'linear-gradient(90deg, #880000, #ff4d4d)' : 'linear-gradient(90deg, #005544, #00ff88)',
+                                        boxShadow: isRoastMode ? '0 0 15px #ff4d4d' : '0 0 15px #00ff88'
+                                    }}
                                 />
                             </div>
                             <p style={{ textAlign: 'right', marginTop: '8px', color: isRoastMode ? '#ff4d4d' : '#00ff88', fontWeight: '900', fontSize: '1.3rem' }}>{data.healthScore}<span style={{ fontSize: '0.9rem', color: '#888' }}>/100</span></p>
@@ -309,6 +309,44 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
                                 {isRoastMode ? '🔥 ' : '💡 '}
                                 {data.briefTip}
                             </motion.p>
+
+                            {/* Proactive Navigation Action */}
+                            {data.nextActionTip && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 1.2, type: 'spring' }}
+                                    style={{
+                                        marginTop: '15px',
+                                        padding: '16px',
+                                        background: 'linear-gradient(135deg, rgba(0,255,136,0.1) 0%, rgba(0,200,255,0.1) 100%)',
+                                        border: '1px solid rgba(0,255,136,0.3)',
+                                        borderRadius: '16px',
+                                        display: 'flex',
+                                        gap: '12px',
+                                        alignItems: 'flex-start',
+                                        boxShadow: '0 4px 15px rgba(0,255,136,0.05)'
+                                    }}>
+                                    <div style={{
+                                        background: 'rgba(0,255,136,0.2)',
+                                        padding: '8px',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        flexShrink: 0
+                                    }}>
+                                        <ScanLine size={18} color="#00ff88" />
+                                    </div>
+                                    <div>
+                                        <span style={{ display: 'block', fontSize: '0.85rem', color: '#00ff88', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>AI Navigator</span>
+                                        <p style={{ color: '#fff', fontSize: '1rem', lineHeight: '1.5', fontWeight: '500' }}>
+                                            {data.nextActionTip}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+
                             {data.sustainabilityTip && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} style={{ marginTop: '10px', fontSize: '0.95rem', color: '#aaa', fontStyle: 'italic', lineHeight: '1.5' }}>🌿 {data.sustainabilityTip}</motion.p>}
 
                             {/* Voice Coach Button */}
@@ -317,96 +355,96 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
                                 whileTap={{ scale: 0.98 }}
                                 data-html2canvas-ignore
                                 onClick={() => {
-                                    const text = \`\${data.foodName}. \${data.calories} calories. \${data.briefTip}\`;
-                            const utterance = new SpeechSynthesisUtterance(text);
-                            if (language === 'ko') utterance.lang = 'ko-KR';
-                            else if (language === 'ja') utterance.lang = 'ja-JP';
-                            else if (language === 'es') utterance.lang = 'es-ES';
-                            else if (language === 'fr') utterance.lang = 'fr-FR';
-                            else if (language === 'zh') utterance.lang = 'zh-CN';
-                            else utterance.lang = 'en-US';
+                                    const text = `${data.foodName}. ${data.calories} calories. ${data.briefTip}`;
+                                    const utterance = new SpeechSynthesisUtterance(text);
+                                    if (language === 'ko') utterance.lang = 'ko-KR';
+                                    else if (language === 'ja') utterance.lang = 'ja-JP';
+                                    else if (language === 'es') utterance.lang = 'es-ES';
+                                    else if (language === 'fr') utterance.lang = 'fr-FR';
+                                    else if (language === 'zh') utterance.lang = 'zh-CN';
+                                    else utterance.lang = 'en-US';
 
-                            window.speechSynthesis.cancel();
-                            window.speechSynthesis.speak(utterance);
+                                    window.speechSynthesis.cancel();
+                                    window.speechSynthesis.speak(utterance);
                                 }}
-                            style={{
-                                marginTop: '25px',
-                                background: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                color: 'white',
-                                padding: '16px',
-                                borderRadius: '16px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '12px',
-                                width: '100%',
-                                fontSize: '1.1rem',
-                                fontWeight: 'bold',
-                                boxShadow: '0 5px 15px rgba(0,0,0,0.2)'
-                            }}
+                                style={{
+                                    marginTop: '25px',
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    color: 'white',
+                                    padding: '16px',
+                                    borderRadius: '16px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '12px',
+                                    width: '100%',
+                                    fontSize: '1.1rem',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 5px 15px rgba(0,0,0,0.2)'
+                                }}
                             >
-                            <Volume2 size={22} /> Listen to {isRoastMode ? 'Roast' : 'Analysis'}
-                        </motion.button>
+                                <Volume2 size={22} /> Listen to {isRoastMode ? 'Roast' : 'Analysis'}
+                            </motion.button>
+                        </motion.div>
+                    </div>
+
+                    {/* Share and Back Buttons */}
+                    <motion.div variants={itemVariants} data-html2canvas-ignore style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
+                        <button onClick={handleShareInstagram} style={{
+                            flex: 1,
+                            background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                            color: 'white',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            padding: '18px',
+                            borderRadius: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            border: 'none',
+                            boxShadow: '0 8px 25px rgba(220, 39, 67, 0.4)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s'
+                        }}
+                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <Instagram size={24} /> Insta Share
+                        </button>
+
+                        <button onClick={onClose} style={{
+                            flex: 1,
+                            background: 'white',
+                            color: '#0a0a0a',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            padding: '18px',
+                            borderRadius: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            border: 'none',
+                            boxShadow: '0 8px 25px rgba(255,255,255,0.2)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s'
+                        }}
+                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <ArrowLeft size={24} /> {t('scanMore')}
+                        </button>
+                    </motion.div>
                 </motion.div>
             </div>
-
-            {/* Share and Back Buttons */}
-            <motion.div variants={itemVariants} data-html2canvas-ignore style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-                <button onClick={handleShareInstagram} style={{
-                    flex: 1,
-                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                    color: 'white',
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    padding: '18px',
-                    borderRadius: '18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    border: 'none',
-                    boxShadow: '0 8px 25px rgba(220, 39, 67, 0.4)',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s'
-                }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                    <Instagram size={24} /> Insta Share
-                </button>
-
-                <button onClick={onClose} style={{
-                    flex: 1,
-                    background: 'white',
-                    color: '#0a0a0a',
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    padding: '18px',
-                    borderRadius: '18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    border: 'none',
-                    boxShadow: '0 8px 25px rgba(255,255,255,0.2)',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s'
-                }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                    <ArrowLeft size={24} /> {t('scanMore')}
-                </button>
-            </motion.div>
-        </motion.div>
-            </div >
-    <style>{`
+            <style>{`
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
-        </div >
+        </div>
     );
 };
 
