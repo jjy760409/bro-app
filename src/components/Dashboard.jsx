@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, Beef, Droplet, Wheat, Target, Compass } from 'lucide-react';
+import { Camera, Flame, Beef, Droplet, Wheat, Target, Compass, Trophy } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
@@ -19,7 +19,7 @@ const itemVariants = {
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
 };
 
-const Dashboard = ({ onStartScan }) => {
+const Dashboard = ({ onStartScan, onLeaderboard }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
     const [todayStats, setTodayStats] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0, scanCount: 0 });
@@ -78,6 +78,10 @@ const Dashboard = ({ onStartScan }) => {
                         <h1 style={{ fontSize: '1.8rem', color: 'white', margin: 0 }}>Hello, {user?.email?.split('@')[0] || 'Bro'}</h1>
                         <p style={{ color: '#aaa', margin: 0, fontSize: '0.9rem' }}>Let's crush your goals today.</p>
                     </div>
+                    <button onClick={onLeaderboard} style={{ background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--bro-green)', fontWeight: 'bold' }}>
+                        <Trophy size={20} />
+                        <span style={{ fontSize: '0.9rem', display: 'none', '@media (min-width: 400px)': { display: 'inline' } }}>Rank</span>
+                    </button>
                 </motion.div>
 
                 {/* Main Progress Ring Map */}

@@ -23,28 +23,38 @@ function AppContent() {
 
   useEffect(() => {
     if (user) {
-      const storedAcceptance = localStorage.getItem('bro_legal_accepted');
-      if (storedAcceptance === 'true') {
-        if (scansLeft > 0) {
-          setView('dashboard'); // Route to Dashboard instead of camera
+      setLoadingProfile(true);
+      import('./services/firebase').then(async ({ db }) => {
+        const { doc, getDoc, updateDoc } = await import('firebase/firestore');
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+
+        let hasOnboarded = false;
+
+        if (snap.exists()) {
+          const data = snap.data();
+          setUserDiet(data.diet || 'none');
+          hasOnboarded = data.hasCompletedOnboarding === true;
+        }
+
+        const storedAcceptance = localStorage.getItem('bro_legal_accepted');
+
+        if (!hasOnboarded) {
+          // Brand new user needs to set language and diet
+          setView('profile'); // We will use DietaryProfile as the Onboarding screen
+        } else if (storedAcceptance !== 'true') {
+          setView('legal');
+        } else if (scansLeft > 0) {
+          setView('dashboard');
         } else {
           setView('paywall');
         }
-      } else {
-        setView('legal'); // After login, check legal
-      }
 
-      setLoadingProfile(true);
-      import('./services/firebase').then(async ({ db }) => {
-        const { doc, getDoc } = await import('firebase/firestore');
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          setUserDiet(snap.data().diet || 'none');
-        }
         setLoadingProfile(false);
       }).catch(error => {
-        console.error("Error fetching user diet:", error);
+        console.error("Error fetching user profile:", error);
         setLoadingProfile(false);
+        setView('dashboard'); // Fallback
       });
     } else {
       setView('login');
@@ -53,9 +63,30 @@ function AppContent() {
     }
   }, [user]);
 
+  const handleProfileComplete = async () => {
+    // Mark onboarding complete in Firebase
+    if (user) {
+      import('./services/firebase').then(async ({ db }) => {
+        const { doc, updateDoc } = await import('firebase/firestore');
+        await updateDoc(doc(db, "users", user.uid), { hasCompletedOnboarding: true });
+      });
+    }
+
+    const storedAcceptance = localStorage.getItem('bro_legal_accepted');
+    if (storedAcceptance === 'true') {
+      if (scansLeft > 0) {
+        setView('dashboard');
+      } else {
+        setView('paywall');
+      }
+    } else {
+      setView('legal');
+    }
+  };
+
   const handleLegalAccepted = () => {
     if (scansLeft > 0) {
-      setView('camera');
+      setView('dashboard'); // Go to dashboard, not camera immediately
     } else {
       setView('paywall');
     }
@@ -87,7 +118,10 @@ function AppContent() {
       {view === 'legal' && <LegalCenter onClose={handleLegalAccepted} />}
 
       {view === 'dashboard' && (
-        <Dashboard onStartScan={() => setView('camera')} />
+        <Dashboard
+          onStartScan={() => setView('camera')}
+          onLeaderboard={() => setView('leaderboard')}
+        />
       )}
 
       {view === 'camera' && (
@@ -124,7 +158,7 @@ function AppContent() {
       )}
 
       {view === 'profile' && (
-        <DietaryProfile onClose={() => setView('camera')} />
+        <DietaryProfile onClose={handleProfileComplete} />
       )}
 
       {view === 'leaderboard' && (
