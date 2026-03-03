@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, Beef, Droplet, Wheat, Target, Compass, Trophy } from 'lucide-react';
+import { Camera, Flame, Beef, Droplet, Wheat, Target, Compass, Trophy, LogOut } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
@@ -21,7 +21,7 @@ const itemVariants = {
 
 const Dashboard = ({ onStartScan, onLeaderboard }) => {
     const { t } = useLanguage();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [todayStats, setTodayStats] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0, scanCount: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -75,13 +75,19 @@ const Dashboard = ({ onStartScan, onLeaderboard }) => {
                 {/* Header */}
                 <motion.div variants={itemVariants} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', color: 'white', margin: 0 }}>Hello, {user?.email?.split('@')[0] || 'Bro'}</h1>
-                        <p style={{ color: '#aaa', margin: 0, fontSize: '0.9rem' }}>Let's crush your goals today.</p>
+                        <h1 style={{ fontSize: '1.8rem', color: 'white', margin: 0 }}>{t('hello')}, {user?.email?.split('@')[0] || 'Bro'}</h1>
+                        <p style={{ color: '#aaa', margin: 0, fontSize: '0.9rem' }}>{t('crushGoals')}</p>
                     </div>
-                    <button onClick={onLeaderboard} style={{ background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--bro-green)', fontWeight: 'bold' }}>
-                        <Trophy size={20} />
-                        <span style={{ fontSize: '0.9rem', display: 'none', '@media (min-width: 400px)': { display: 'inline' } }}>Rank</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={onLeaderboard} style={{ background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0,255,136,0.3)', padding: '10px 15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--bro-green)', fontWeight: 'bold' }}>
+                            <Trophy size={20} />
+                            <span style={{ fontSize: '0.9rem', display: 'none', '@media (min-width: 400px)': { display: 'inline' } }}>{t('rank')}</span>
+                        </button>
+                        <button onClick={logout} style={{ background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.3)', padding: '10px 15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ff4d4d', fontWeight: 'bold' }}>
+                            <LogOut size={20} />
+                            <span style={{ fontSize: '0.9rem', display: 'none', '@media (min-width: 400px)': { display: 'inline' } }}>Logout</span>
+                        </button>
+                    </div>
                 </motion.div>
 
                 {/* Main Progress Ring Map */}
@@ -100,7 +106,7 @@ const Dashboard = ({ onStartScan, onLeaderboard }) => {
                     <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'var(--bro-green)', filter: 'blur(100px)', opacity: 0.2 }}></div>
 
                     <h2 style={{ color: '#ddd', fontSize: '1.1rem', marginBottom: '20px', alignSelf: 'flex-start', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Compass size={18} color="var(--bro-green)" /> Daily Navigator
+                        <Compass size={18} color="var(--bro-green)" /> {t('dailyNav')}
                     </h2>
 
                     {/* Circular Progress (Simplified CSS implementation) */}
@@ -131,9 +137,9 @@ const Dashboard = ({ onStartScan, onLeaderboard }) => {
 
                 {/* Macro Grid */}
                 <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                    <MacroCard icon={<Beef color="#ffaa00" size={18} />} title="Protein" current={todayStats.protein} target={goals.protein} color="#ffaa00" />
-                    <MacroCard icon={<Wheat color="#d4d400" size={18} />} title="Carbs" current={todayStats.carbs} target={goals.carbs} color="#d4d400" />
-                    <MacroCard icon={<Droplet color="#00aaff" size={18} />} title="Fat" current={todayStats.fat} target={goals.fat} color="#00aaff" />
+                    <MacroCard icon={<Beef color="#ffaa00" size={18} />} title={t('protein')} current={todayStats.protein} target={goals.protein} color="#ffaa00" />
+                    <MacroCard icon={<Wheat color="#d4d400" size={18} />} title={t('carbs')} current={todayStats.carbs} target={goals.carbs} color="#d4d400" />
+                    <MacroCard icon={<Droplet color="#00aaff" size={18} />} title={t('fat')} current={todayStats.fat} target={goals.fat} color="#00aaff" />
                 </motion.div>
 
             </motion.div>
@@ -144,7 +150,7 @@ const Dashboard = ({ onStartScan, onLeaderboard }) => {
                 onClick={onStartScan}
                 style={{
                     position: 'fixed',
-                    bottom: '30px',
+                    bottom: '80px', // Moved up to make room for footer
                     left: '50%',
                     transform: 'translateX(-50%)',
                     background: 'linear-gradient(135deg, var(--bro-green) 0%, #00c060 100%)',
@@ -164,6 +170,15 @@ const Dashboard = ({ onStartScan, onLeaderboard }) => {
             >
                 <Camera size={24} /> {t('scanFood')}
             </motion.button>
+
+            {/* Footer Links (Legal & App Info) */}
+            <div style={{ position: 'fixed', bottom: '20px', left: 0, width: '100%', textAlign: 'center', zIndex: 90 }}>
+                <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>
+                    <span onClick={() => window.open('/terms.html', '_blank')} style={{ cursor: 'pointer', textDecoration: 'underline', marginRight: '15px' }}>{t('terms')}</span>
+                    <span onClick={() => window.open('/privacy.html', '_blank')} style={{ cursor: 'pointer', textDecoration: 'underline', marginRight: '15px' }}>{t('privacy')}</span>
+                    <span style={{ cursor: 'pointer' }}>SmartCal AI © 2026</span>
+                </p>
+            </div>
         </div>
     );
 };

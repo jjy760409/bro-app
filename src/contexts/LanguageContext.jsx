@@ -25,6 +25,13 @@ const translations = {
         accept: "I Accept",
         cameraError: "Camera access denied or not available.",
         tapToCapture: "Tap to capture",
+        hello: "Hello",
+        crushGoals: "Let's crush your goals today.",
+        dailyNav: "Daily Navigator",
+        scanFood: "Scan Meal",
+        rank: "Rank",
+        terms: "Terms of Service",
+        privacy: "Privacy Policy"
     },
     ko: {
         analyzing: "분석 중...",
@@ -46,6 +53,13 @@ const translations = {
         accept: "동의합니다",
         cameraError: "카메라 접근이 거부되었거나 사용할 수 없습니다.",
         tapToCapture: "터치하여 촬영",
+        hello: "안녕하세요",
+        crushGoals: "오늘도 목표를 달성해 보세요.",
+        dailyNav: "데일리 네비게이터",
+        scanFood: "식단 스캔",
+        rank: "랭킹",
+        terms: "이용약관",
+        privacy: "개인정보 처리방침"
     },
     ja: {
         analyzing: "分析中...",
@@ -67,6 +81,13 @@ const translations = {
         accept: "同意する",
         cameraError: "カメラへのアクセスが拒否されたか、利用できません。",
         tapToCapture: "タップして撮影",
+        hello: "こんにちは",
+        crushGoals: "今日の目標を達成しましょう。",
+        dailyNav: "デイリーナビゲーター",
+        scanFood: "食事をスキャン",
+        rank: "ランク",
+        terms: "利用規約",
+        privacy: "プライバシーポリシー"
     },
     es: {
         analyzing: "Analizando...",
@@ -88,6 +109,13 @@ const translations = {
         accept: "Acepto",
         cameraError: "Acceso a la cámara denegado o no disponible.",
         tapToCapture: "Toque para capturar",
+        hello: "Hola",
+        crushGoals: "Alcanza tus metas hoy.",
+        dailyNav: "Navegador Diario",
+        scanFood: "Escanear comida",
+        rank: "Rango",
+        terms: "Términos de servicio",
+        privacy: "Política de privacidad"
     },
     fr: {
         analyzing: "Analyse en cours...",
@@ -109,6 +137,13 @@ const translations = {
         accept: "J'accepte",
         cameraError: "Accès à la caméra refusé ou non disponible.",
         tapToCapture: "Appuyez pour capturer",
+        hello: "Bonjour",
+        crushGoals: "Atteignons vos objectifs aujourd'hui.",
+        dailyNav: "Navigateur Quotidien",
+        scanFood: "Scanner le repas",
+        rank: "Rang",
+        terms: "Conditions d'utilisation",
+        privacy: "Politique de confidentialité"
     },
     zh: {
         analyzing: "分析中...",
@@ -130,6 +165,13 @@ const translations = {
         accept: "我接受",
         cameraError: "相机访问被拒绝或不可用。",
         tapToCapture: "点击拍摄",
+        hello: "你好",
+        crushGoals: "今天也要达成目标。",
+        dailyNav: "每日导航",
+        scanFood: "扫描食物",
+        rank: "排名",
+        terms: "服务条款",
+        privacy: "隐私政策"
     }
 };
 
