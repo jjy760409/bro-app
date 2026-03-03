@@ -199,19 +199,35 @@ const Paywall = ({ onSuccess, onClose }) => {
                 </PayPalScriptProvider>
             </div>
 
-            <div style={{ marginTop: '30px', borderTop: '1px solid #333', paddingTop: '20px', width: '100%' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: '#666', fontSize: '0.8rem', marginBottom: '10px' }}>
-                    <AlertCircle size={16} />
-                    <span>Automated Cancellation & Refund Available</span>
+            <div style={{ marginTop: '30px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px', width: '100%' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: '#00ff88', fontSize: '0.9rem', marginBottom: '12px', fontWeight: 'bold' }}>
+                    <ShieldCheck size={18} />
+                    <span>100% Automated Guarantee</span>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#555', lineHeight: '1.4' }}>
-                    By subscribing, you agree to our Terms. You can cancel anytime in the app settings.
-                    Refunds are automatically processed if requested within 7 days.
-                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                        <Check size={14} color="#aaa" style={{ marginTop: '3px' }} />
+                        <p style={{ fontSize: '0.8rem', color: '#aaa', margin: 0, lineHeight: '1.4' }}>
+                            <strong style={{ color: '#ddd' }}>Instant Access:</strong> Your premium features activate the second PayPal approves the transaction.
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                        <Check size={14} color="#aaa" style={{ marginTop: '3px' }} />
+                        <p style={{ fontSize: '0.8rem', color: '#aaa', margin: 0, lineHeight: '1.4' }}>
+                            <strong style={{ color: '#ddd' }}>1-Click Cancel:</strong> Cancel anytime directly from your dashboard settings. No calling support required.
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                        <Check size={14} color="#aaa" style={{ marginTop: '3px' }} />
+                        <p style={{ fontSize: '0.8rem', color: '#aaa', margin: 0, lineHeight: '1.4' }}>
+                            <strong style={{ color: '#ddd' }}>7-Day Auto Refund:</strong> Not satisfied? Click 'Request Refund' within 7 days for an automated, no-questions-asked refund directly to your PayPal.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {onClose && (
-                <button onClick={onClose} style={{ marginTop: '20px', background: 'none', border: 'none', color: '#666', padding: '10px', width: '100%' }}>
+                <button onClick={onClose} style={{ marginTop: '20px', background: 'none', border: 'none', color: '#666', padding: '10px', width: '100%', cursor: 'pointer', textDecoration: 'underline' }}>
                     Maybe Later
                 </button>
             )}
