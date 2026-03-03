@@ -38,11 +38,9 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
             You are an expert nutritionist and food analyst. Analyze this image.
             User's Dietary Preference: ${diet.toUpperCase()}.
             
-            Determine if this image contains ANYTHING consumable by humans (e.g., meals, snacks, packaged foods, beverages, ingredients, dietary supplements).
-            Be Extremely Lenient: If it looks remotely like food, a drink, or a nutritional item, consider it FOOD.
-            
-            If it is absolutely NOT consumable (e.g., a person, car, scenery, furniture, random object with no relation to food):
-            Return JSON: { "isFood": false, "reason": "Not a recognizable consumable item." }
+            Determine what is in the image. You must NEVER reject the image. 
+            ALWAYS treat the image as something to be analyzed nutritionally.
+            If it is obviously a non-food item (e.g., a car, a phone, a person, a desk), invent imaginary, funny, or metaphorical nutritional values for it.
 
             If it IS consumable:
             Check if it complies with the dietary preference (${diet}).
@@ -56,7 +54,7 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
             Provide your best estimate for the nutritional values. If you cannot be entirely sure, make an educated guess based on typical serving sizes for the item shown.
             
             Return ONLY valid JSON with these exact keys:
-            - isFood: true (boolean)
+            - isFood: true (boolean) - ALWAYS TRUE
             - foodName: Specific name of the food/drink (in ${language}) (string)
             - calories: Total calories (integer)
             - protein: Protein in grams (integer)
@@ -98,33 +96,31 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
 
             try {
                 const data = JSON.parse(jsonStr);
-                if (data.isFood !== false) {
-                    data.calories = data.calories || 0;
-                    data.protein = data.protein || 0;
-                    data.carbs = data.carbs || 0;
-                    data.fat = data.fat || 0;
-                    data.healthScore = data.healthScore || 50;
-                    data.foodName = data.foodName || (language === 'ko' ? '알 수 없는 부분 인식됨' : 'Partially Recognized Item');
-                }
+                data.isFood = true; // Force it to be food regardless
+                data.calories = data.calories || 0;
+                data.protein = data.protein || 0;
+                data.carbs = data.carbs || 0;
+                data.fat = data.fat || 0;
+                data.healthScore = data.healthScore || 50;
+                data.foodName = data.foodName || (language === 'ko' ? '알 수 없는 부분 인식됨' : 'Partially Recognized Item');
+
                 return data;
             } catch (parseError) {
                 console.error("Failed to parse Gemini JSON:", jsonStr);
-                return { isFood: false, reason: "Analysis succeeded but data format was unreadable. Please try again." };
+                throw new Error("JSON_PARSE_ERROR"); // Throw error to trigger rotation
             }
 
         } catch (error) {
             console.error(`Gemini Error with key index ${currentKeyIndex}:`, error);
 
-            // Check if it's a 429 Quota Error
-            if (error.message && error.message.includes("429")) {
-                console.warn(`API Key ${currentKeyIndex} hit rate limit. Rotating to next key...`);
-                // Rotate to the next available key
-                currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
-                attempts++;
-                // Let the while loop retry with the new key
-            } else {
-                // Not a quota error, return the failure
-                return { isFood: false, reason: "Error analyzing image: " + (error.message || "Unknown error") };
+            // Rotate on ANY error (429 Quota, 400 Bad Request, JSON parse error, etc.)
+            console.warn(`API Key ${currentKeyIndex} failed. Rotating to next key...`);
+            currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+            attempts++;
+
+            // If we've tried all keys and still failed, return the error of the last key
+            if (attempts >= API_KEYS.length) {
+                return { isFood: false, reason: "Error analyzing image: " + (error.message || "All fallback keys failed.") };
             }
         }
     }
