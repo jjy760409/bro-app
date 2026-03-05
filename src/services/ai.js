@@ -38,24 +38,22 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
             You are an expert nutritionist and food analyst. Analyze this image.
             User's Dietary Preference: ${diet.toUpperCase()}.
             
-            Determine what is in the image. You must NEVER reject the image. 
-            ALWAYS treat the image as something to be analyzed nutritionally.
-            If it is obviously a non-food item (e.g., a car, a phone, a person, a desk), invent imaginary, funny, or metaphorical nutritional values for it.
-
+            CRITICAL INSTRUCTION: You must NEVER reject the image. 
+            No matter what the image is (even if it is a desk, a phone, a person, a blank wall, or blurry), you MUST process it and return the exact JSON format requested.
+            If the object is clearly NOT food, make up a sarcastic or metaphorical "food name" for it, and assign it 0 calories, 0 macros, and a health score of 0.
+            
             If it IS consumable:
             Check if it complies with the dietary preference (${diet}).
-            If it VIOLATES the diet (e.g., Pork for Halal/Kosher, Meat for Vegan/Vegetarian):
+            If it VIOLATES the diet:
                - Set 'isSafe': false
                - 'warning': "Contains [Ingredient], not suitable for ${diet} diet."
             Else:
                - Set 'isSafe': true
                - 'warning': null
 
-            Provide your best estimate for the nutritional values. If you cannot be entirely sure, make an educated guess based on typical serving sizes for the item shown.
-            
             Return ONLY valid JSON with these exact keys:
             - isFood: true (boolean) - ALWAYS TRUE
-            - foodName: Specific name of the food/drink (in ${language}) (string)
+            - foodName: Specific name of the item (in ${language}) (string)
             - calories: Total calories (integer)
             - protein: Protein in grams (integer)
             - carbs: Carbs in grams (integer)
@@ -101,8 +99,8 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
                 data.protein = data.protein || 0;
                 data.carbs = data.carbs || 0;
                 data.fat = data.fat || 0;
-                data.healthScore = data.healthScore || 50;
-                data.foodName = data.foodName || (language === 'ko' ? '알 수 없는 부분 인식됨' : 'Partially Recognized Item');
+                data.healthScore = data.healthScore || 0;
+                data.foodName = data.foodName || (language === 'ko' ? '인식 불가 (분석 실패)' : 'Partially Recognized Item');
 
                 return data;
             } catch (parseError) {
@@ -118,15 +116,38 @@ export const analyzeImage = async (imageBase64, language = 'en', diet = 'none', 
             currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
             attempts++;
 
-            // If we've tried all keys and still failed, return the error of the last key
+            // If we've tried all keys and still failed, return a fallback object instead of crashing completely
             if (attempts >= API_KEYS.length) {
-                return { isFood: false, reason: "Error analyzing image: " + (error.message || "All fallback keys failed.") };
+                console.error("All Gemini API keys failed or returned invalid JSON.");
+                return generateEmergencyFallback(language);
             }
         }
     }
 
     // If we've exhausted all keys
-    return { isFood: false, reason: "All AI capacity is currently maxed out globally. Please try again in a few moments." };
+    return generateEmergencyFallback(language);
+};
+
+// Emergency fallback to prevent the app from completely freezing or throwing blank screens
+const generateEmergencyFallback = (lang) => {
+    return {
+        isFood: true,
+        foodName: lang === 'ko' ? '분석에 실패한 음식 (AI 우회됨)' : 'Unanalyzable Food (AI Bypassed)',
+        calories: 300,
+        protein: 10,
+        carbs: 30,
+        fat: 15,
+        healthScore: 50,
+        briefTip: lang === 'ko'
+            ? "사진 화질이 낮거나 서버 접속량 폭주로 정확한 분석에 실패했습니다. 대략적인 평균값을 제공합니다."
+            : "Image quality was too low or server was overloaded. Providing generic estimated values.",
+        confidence: 20,
+        isSafe: true,
+        warning: null,
+        carbonFootprint: "Medium",
+        sustainabilityTip: "",
+        nextActionTip: lang === 'ko' ? "조금 더 밝은 곳에서 음식 전체가 나오도록 다시 촬영해보세요." : "Try taking the photo again in a brighter environment."
+    };
 };
 
 const mockAnalysis = (lang) => {

@@ -141,7 +141,7 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
             const video = videoRef.current;
             const canvas = canvasRef.current;
             const context = canvas.getContext('2d');
-            const MAX_DIMENSION = 800;
+            const MAX_DIMENSION = 1200; // Increased resolution to capture clearer details for Gemini
             let width = video.videoWidth;
             let height = video.videoHeight;
 
@@ -161,7 +161,7 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
             canvas.height = height;
             context.drawImage(video, 0, 0, width, height);
 
-            const imageSrc = canvas.toDataURL('image/jpeg', 0.8);
+            const imageSrc = canvas.toDataURL('image/jpeg', 0.85); // Slightly higher quality JPEG compression
             onCapture(imageSrc);
         }
     };
