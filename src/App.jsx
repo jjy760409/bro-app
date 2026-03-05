@@ -16,6 +16,9 @@ function AppContent() {
   const { user, scansLeft, decrementScans, setPremium } = useAuth();
   const [view, setView] = useState('login'); // Start with login
   const [capturedImage, setCapturedImage] = useState(null);
+  const [scanType, setScanType] = useState('ai');
+  const [barcodeData, setBarcodeData] = useState(null);
+
   const [userDiet, setUserDiet] = useState('none');
   const [isRoastMode, setIsRoastMode] = useState(false); // Global Roast Mode Toggle
 
@@ -92,8 +95,10 @@ function AppContent() {
     }
   };
 
-  const handleCapture = (imageSrc) => {
+  const handleCapture = (imageSrc, type = 'ai', data = null) => {
     setCapturedImage(imageSrc);
+    setScanType(type);
+    setBarcodeData(data);
     // Remove artificial delay to show AnalysisResult and its loading spinner instantly
     setView('analysis');
   };
@@ -147,6 +152,8 @@ function AppContent() {
       {view === 'analysis' && (
         <AnalysisResult
           image={capturedImage}
+          scanType={scanType}
+          barcodeData={barcodeData}
           onClose={handleAnalysisComplete}
           userDiet={userDiet}
           isRoastMode={isRoastMode}

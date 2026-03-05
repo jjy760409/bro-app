@@ -4,6 +4,7 @@ import { Camera, RefreshCw, Zap, Clock, Share2, Settings, Flame, Trophy, AlertTr
 import { motion, AnimatePresence } from 'framer-motion';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
+import { Html5Qrcode } from 'html5-qrcode';
 import '../styles/index.css';
 
 const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, isRoastMode, setIsRoastMode }) => {
@@ -13,6 +14,7 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
     const [stream, setStream] = useState(null);
     const [facingMode, setFacingMode] = useState('environment');
     const [flash, setFlash] = useState(false);
+    const [scanMode, setScanMode] = useState('ai'); // 'ai' or 'barcode'
 
     // HUD State
     const [predictions, setPredictions] = useState([]);
@@ -21,9 +23,42 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
     const [targetLocked, setTargetLocked] = useState(false);
 
     useEffect(() => {
-        startCamera();
+        if (scanMode === 'ai') {
+            startCamera();
+        }
         return () => stopCamera();
-    }, [facingMode]);
+    }, [facingMode, scanMode]);
+
+    // Barcode Scanner Logic
+    useEffect(() => {
+        let html5QrCode;
+        if (scanMode === 'barcode') {
+            stopCamera(); // Stop normal camera feed
+            html5QrCode = new Html5Qrcode("barcode-reader");
+
+            html5QrCode.start(
+                { facingMode: facingMode },
+                { fps: 10, qrbox: { width: 300, height: 150 } },
+                (decodedText) => {
+                    // Success!
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    html5QrCode.stop().then(() => {
+                        onCapture(null, 'barcode', decodedText);
+                    }).catch(console.error);
+                },
+                (errorMessage) => {
+                    // ignore frequent parse errors
+                }
+            ).catch(err => {
+                console.error("Barcode scan start error", err);
+            });
+        }
+        return () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch(console.error);
+            }
+        };
+    }, [scanMode, facingMode]);
 
     // TensorFlow.js Real-time Detection
     useEffect(() => {
@@ -133,13 +168,17 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
 
     return (
         <div className="camera-view full-screen" style={{ backgroundColor: 'black', position: 'relative', overflow: 'hidden' }}>
-            <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="full-screen"
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-            />
+            {scanMode === 'ai' ? (
+                <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="full-screen"
+                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                />
+            ) : (
+                <div id="barcode-reader" style={{ width: '100%', height: '100%', objectFit: 'cover' }}></div>
+            )}
             <canvas ref={canvasRef} style={{ display: 'none' }} />
 
             {/* AI Head-Up Display (HUD) */}
@@ -214,7 +253,7 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
                             position: 'absolute', width: '100%', background: 'linear-gradient(to bottom, transparent, rgba(0,255,204,0.3), transparent)'
                         }}
                     />
-                    {targetLocked && (
+                    {targetLocked && scanMode === 'ai' && (
                         <div style={{ color: '#00ff88', textShadow: '0 0 10px #00ff88', fontWeight: 'bold', letterSpacing: '2px', fontSize: '0.9rem', marginTop: '300px' }}>
                             ORGANIC TARGET LOCKED
                         </div>
@@ -250,6 +289,22 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
                 </div>
             </div>
 
+            {/* Mode Toggle Overlay */}
+            <div style={{ position: 'absolute', top: '90px', width: '100%', display: 'flex', justifyContent: 'center', zIndex: 15 }}>
+                <div style={{ display: 'flex', background: 'rgba(0,0,0,0.6)', borderRadius: '30px', padding: '5px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <button
+                        onClick={() => setScanMode('ai')}
+                        style={{ padding: '8px 20px', borderRadius: '25px', background: scanMode === 'ai' ? 'var(--bro-green)' : 'transparent', color: scanMode === 'ai' ? '#000' : '#fff', border: 'none', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+                        AI Scan
+                    </button>
+                    <button
+                        onClick={() => setScanMode('barcode')}
+                        style={{ padding: '8px 20px', borderRadius: '25px', background: scanMode === 'barcode' ? 'var(--bro-green)' : 'transparent', color: scanMode === 'barcode' ? '#000' : '#fff', border: 'none', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <Scan size={16} /> Barcode
+                    </button>
+                </div>
+            </div>
+
             {/* Bottom Shutter Controls */}
             <div className="controls-layer" style={{ position: 'absolute', bottom: '30px', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 20 }}>
                 <button className="glass-panel" onClick={() => setFlash(!flash)} style={{ padding: '15px', borderRadius: '50%', color: 'white', border: 'none', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)' }}>
@@ -259,16 +314,18 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={takePicture}
+                    onClick={scanMode === 'ai' ? takePicture : null}
+                    disabled={scanMode !== 'ai'}
                     style={{
                         width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'transparent',
-                        border: targetLocked ? '4px solid #00ff88' : (isRoastMode ? '4px solid #ff4d4d' : '4px solid white'),
-                        display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer',
-                        boxShadow: targetLocked ? '0 0 20px rgba(0,255,136,0.6)' : 'none',
-                        transition: 'all 0.3s ease'
+                        border: targetLocked && scanMode === 'ai' ? '4px solid #00ff88' : (isRoastMode ? '4px solid #ff4d4d' : '4px solid white'),
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: scanMode === 'ai' ? 'pointer' : 'not-allowed',
+                        boxShadow: targetLocked && scanMode === 'ai' ? '0 0 20px rgba(0,255,136,0.6)' : 'none',
+                        transition: 'all 0.3s ease',
+                        opacity: scanMode === 'ai' ? 1 : 0.5
                     }}
                 >
-                    <div style={{ width: '66px', height: '66px', borderRadius: '50%', backgroundColor: targetLocked ? '#00ff88' : (isRoastMode ? '#ff4d4d' : 'white'), transition: 'background-color 0.3s ease' }}></div>
+                    <div style={{ width: '66px', height: '66px', borderRadius: '50%', backgroundColor: targetLocked && scanMode === 'ai' ? '#00ff88' : (isRoastMode ? '#ff4d4d' : 'white'), transition: 'background-color 0.3s ease' }}></div>
                 </motion.button>
 
                 <button className="glass-panel" onClick={toggleCamera} style={{ padding: '15px', borderRadius: '50%', color: 'white', border: 'none', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)' }}>

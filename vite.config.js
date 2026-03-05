@@ -14,6 +14,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5000000 // 5MB limit
+      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Bro App - Food Scanner',
@@ -38,4 +41,15 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          tensorflow: ['@tensorflow/tfjs', '@tensorflow-models/coco-ssd'],
+          firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+          vendor: ['react', 'react-dom', 'framer-motion']
+        }
+      }
+    }
+  }
 })

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Flame, Beef, Droplet, Wheat, ArrowLeft, Volume2, Leaf, Instagram, AlertTriangle, ScanLine } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { analyzeImage } from '../services/ai';
+import { analyzeImage, analyzeBarcode } from '../services/ai';
 import { db } from '../services/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import html2canvas from 'html2canvas';
@@ -22,9 +22,9 @@ const itemVariants = {
     show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 120, damping: 12 } }
 };
 
-const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false }) => {
+const AnalysisResult = ({ image, scanType = 'ai', barcodeData = null, onClose, userDiet = 'none', isRoastMode = false }) => {
     const { t, language } = useLanguage();
-    const { user, decrementScans } = useAuth();
+    const { user, decrementScans, appleHealthSynced } = useAuth();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const hasSavedInfo = useRef(false);
@@ -33,8 +33,13 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
     useEffect(() => {
         const processImage = async () => {
             try {
-                // Pass isRoastMode to ai.js
-                const result = await analyzeImage(image, language, userDiet, isRoastMode);
+                let result;
+                if (scanType === 'barcode' && barcodeData) {
+                    result = await analyzeBarcode(barcodeData, language, userDiet, isRoastMode);
+                } else {
+                    result = await analyzeImage(image, language, userDiet, isRoastMode);
+                }
+
                 setData(result);
                 // Slight artificial delay just to show off the cool scanning animation for at least 1.5 seconds minimum
                 setTimeout(() => setLoading(false), 1500);
@@ -64,7 +69,7 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
             }
         };
         processImage();
-    }, [image, language, userDiet, user, decrementScans, isRoastMode]);
+    }, [image, scanType, barcodeData, language, userDiet, user, decrementScans, isRoastMode]);
 
     const handleShareInstagram = async () => {
         if (!captureRef.current) return;
@@ -102,17 +107,19 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
     if (loading) {
         return (
             <div className="full-screen" style={{ position: 'relative', background: '#000', overflow: 'hidden' }}>
-                {/* Background Image Blurred for context */}
-                <motion.div
-                    initial={{ scale: 1.1, filter: 'blur(0px) brightness(1)' }}
-                    animate={{ scale: 1, filter: 'blur(8px) brightness(0.4)' }}
-                    transition={{ duration: 1 }}
-                    style={{
-                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                        backgroundImage: `url(${image})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                        zIndex: 0
-                    }}
-                />
+                {/* Background Image Blurred for context (Only if not barcode) */}
+                {scanType === 'ai' && (
+                    <motion.div
+                        initial={{ scale: 1.1, filter: 'blur(0px) brightness(1)' }}
+                        animate={{ scale: 1, filter: 'blur(8px) brightness(0.4)' }}
+                        transition={{ duration: 1 }}
+                        style={{
+                            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                            backgroundImage: `url(${image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                            zIndex: 0
+                        }}
+                    />
+                )}
 
                 {/* AI Scanning overlay text */}
                 <div style={{ position: 'absolute', top: '15%', width: '100%', textAlign: 'center', zIndex: 10 }}>
@@ -124,7 +131,7 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
                             textTransform: 'uppercase',
                             textShadow: isRoastMode ? '0 0 20px rgba(255,77,77,0.8)' : '0 0 20px rgba(0,255,136,0.8)'
                         }}>
-                            {isRoastMode ? 'AI ROASTING...' : 'AI ANALYZING...'}
+                            {scanType === 'barcode' ? 'DECODING BARCODE...' : (isRoastMode ? 'AI ROASTING...' : 'AI ANALYZING...')}
                         </h2>
                         <p style={{ color: '#fff', fontSize: '1rem', marginTop: '10px', fontFamily: 'monospace', opacity: 0.8 }}>
                             Extracting real-time nutritional matrix
@@ -187,23 +194,25 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
             background: '#0a0a0a',
             overflow: 'hidden'
         }}>
-            {/* Full Screen Background Image */}
-            <motion.div
-                initial={{ transform: 'scale(1.1)', filter: 'brightness(0.5) blur(10px)' }}
-                animate={{ transform: 'scale(1)', filter: 'brightness(0.3) blur(0px)' }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    backgroundImage: `url(${image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    zIndex: 0
-                }}
-            />
+            {/* Full Screen Background Image (Only if AI scan) */}
+            {scanType === 'ai' && (
+                <motion.div
+                    initial={{ transform: 'scale(1.1)', filter: 'brightness(0.5) blur(10px)' }}
+                    animate={{ transform: 'scale(1)', filter: 'brightness(0.3) blur(0px)' }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundImage: `url(${image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        zIndex: 0
+                    }}
+                />
+            )}
 
             {/* Dark Gradient Overlay for Readability */}
             <div style={{
@@ -220,8 +229,15 @@ const AnalysisResult = ({ image, onClose, userDiet = 'none', isRoastMode = false
             <div className="no-scrollbar" style={{ position: 'relative', zIndex: 10, padding: '30px 20px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
 
                 <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ width: '100%' }}>
+
+                    {appleHealthSynced && (
+                        <motion.div variants={itemVariants} style={{ alignSelf: 'center', background: 'rgba(255,255,255,0.9)', color: '#000', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '15px', display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 15px rgba(255,255,255,0.3)' }}>
+                            🍎 Synced to Apple Health
+                        </motion.div>
+                    )}
+
                     {isRoastMode && (
-                        <motion.div variants={itemVariants} style={{ alignSelf: 'center', background: 'rgba(255,50,50,0.8)', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <motion.div variants={itemVariants} style={{ alignSelf: 'center', background: 'rgba(255,50,50,0.8)', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px', display: 'inline-flex', alignItems: 'center', gap: '5px', marginLeft: appleHealthSynced ? '10px' : '0' }}>
                             <AlertTriangle size={16} /> Roast Mode Result
                         </motion.div>
                     )}

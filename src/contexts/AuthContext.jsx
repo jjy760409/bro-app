@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [scansLeft, setScansLeft] = useState(3);
     const [streak, setStreak] = useState(0);
+    const [appleHealthSynced, setAppleHealthSynced] = useState(false);
 
     useEffect(() => {
         // Init Firebase Auth Listener
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }) => {
                         if (userSnap.exists()) {
                             const data = userSnap.data();
                             setScansLeft(data.scansLeft);
+                            setAppleHealthSynced(data.appleHealthSynced || false);
 
                             // Streak Logic
                             const today = new Date().toDateString();
@@ -61,10 +63,12 @@ export const AuthProvider = ({ children }) => {
                                 isPremium: false,
                                 createdAt: new Date(),
                                 streak: 1,
-                                lastVisit: new Date().toDateString()
+                                lastVisit: new Date().toDateString(),
+                                appleHealthSynced: false
                             });
                             setScansLeft(3);
                             setStreak(1);
+                            setAppleHealthSynced(false);
                         }
                     } catch (e) {
                         console.error("Firestore Error:", e);
@@ -90,9 +94,9 @@ export const AuthProvider = ({ children }) => {
                 console.log("User closed the popup or cancelled the request.");
                 return;
             }
-            if(error.code === 'auth/unauthorized-domain') {
-                 alert("Login failed: Unauthorized domain.\n\n(Tip: Please add smartcal-ai.com to your Firebase Console -> Authentication -> Settings -> Authorized domains!)");
-                 return;
+            if (error.code === 'auth/unauthorized-domain') {
+                alert("Login failed: Unauthorized domain.\n\n(Tip: Please add smartcal-ai.com to your Firebase Console -> Authentication -> Settings -> Authorized domains!)");
+                return;
             }
             alert("Login failed: " + error.message + "\n\n(Tip: Check console for full error. If you haven't set up Firebase, this is expected!)");
         }
@@ -170,8 +174,22 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const toggleHealthSync = async () => {
+        if (!user) return;
+        const newState = !appleHealthSynced;
+        setAppleHealthSynced(newState);
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, {
+                appleHealthSynced: newState
+            });
+        } catch (e) {
+            console.error("Health sync update failed:", e);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading, appleHealthSynced, toggleHealthSync }}>
             {!loading && children}
         </AuthContext.Provider>
     );

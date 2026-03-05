@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, Beef, Droplet, Wheat, Target, Compass, Trophy, LogOut } from 'lucide-react';
+import { Camera, Flame, Beef, Droplet, Wheat, Target, Compass, Trophy, LogOut, Activity } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
@@ -21,7 +21,7 @@ const itemVariants = {
 
 const Dashboard = ({ onStartScan, onLeaderboard }) => {
     const { t } = useLanguage();
-    const { user, logout } = useAuth();
+    const { user, logout, appleHealthSynced, toggleHealthSync } = useAuth();
     const [todayStats, setTodayStats] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0, scanCount: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -140,6 +140,35 @@ const Dashboard = ({ onStartScan, onLeaderboard }) => {
                     <MacroCard icon={<Beef color="#ffaa00" size={18} />} title={t('protein')} current={todayStats.protein} target={goals.protein} color="#ffaa00" />
                     <MacroCard icon={<Wheat color="#d4d400" size={18} />} title={t('carbs')} current={todayStats.carbs} target={goals.carbs} color="#d4d400" />
                     <MacroCard icon={<Droplet color="#00aaff" size={18} />} title={t('fat')} current={todayStats.fat} target={goals.fat} color="#00aaff" />
+                </motion.div>
+
+                {/* Apps & Devices Hub */}
+                <motion.div variants={itemVariants} style={{ background: 'rgba(20,20,20,0.6)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '5px' }}>
+                    <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Activity size={18} color="#ff4d4d" /> Apps & Devices
+                    </h3>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', background: 'white', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px' }}>
+                                🍎
+                            </div>
+                            <div>
+                                <h4 style={{ color: 'white', margin: 0, fontSize: '1rem' }}>Apple Health</h4>
+                                <p style={{ color: '#888', margin: 0, fontSize: '0.8rem' }}>Sync nutrition data</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleHealthSync}
+                            style={{
+                                background: appleHealthSynced ? 'rgba(0,255,136,0.1)' : 'var(--bro-green)',
+                                border: appleHealthSynced ? '1px solid rgba(0,255,136,0.3)' : 'none',
+                                color: appleHealthSynced ? '#00ff88' : '#000',
+                                padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s ease'
+                            }}>
+                            {appleHealthSynced ? 'Connected' : 'Connect'}
+                        </button>
+                    </div>
                 </motion.div>
 
             </motion.div>

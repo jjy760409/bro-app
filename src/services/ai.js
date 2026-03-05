@@ -152,3 +152,63 @@ const mockAnalysis = (lang) => {
         }, 2000);
     });
 };
+
+export const analyzeBarcode = async (barcode, language = 'en', diet = 'none', isRoastMode = false) => {
+    try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+        const data = await res.json();
+
+        if (data.status === 1 && data.product) {
+            const p = data.product;
+            const n = p.nutriments || {};
+
+            const name = p.product_name || p.product_name_en || `Product ${barcode}`;
+            const kcal = Math.round(n['energy-kcal_100g'] || (n['energy-kj_100g'] ? n['energy-kj_100g'] / 4.184 : 0));
+            const pro = Math.round(n.proteins_100g || 0);
+            const carb = Math.round(n.carbohydrates_100g || 0);
+            const fat = Math.round(n.fat_100g || 0);
+
+            // Map nutriscore (A-E) to a health score out of 100
+            let score = 70;
+            if (p.nutriscore_grade) {
+                const grades = { a: 95, b: 80, c: 60, d: 40, e: 20 };
+                score = grades[p.nutriscore_grade.toLowerCase()] || 70;
+            }
+
+            let tip = isRoastMode
+                ? "Barcode scanned. It's processed junk, hope you're proud."
+                : "Exact barcode match found. 100g values shown.";
+            if (language === 'ko') {
+                tip = isRoastMode ? "바코드 스캔 완료. 공장제 인스턴트를 먹다니 자랑스럽네요." : "바코드 스캔 완료. 100g 기준 정확한 데이터입니다.";
+            }
+
+            return {
+                isFood: true,
+                foodName: name,
+                calories: kcal,
+                protein: pro,
+                carbs: carb,
+                fat: fat,
+                healthScore: score,
+                briefTip: tip,
+                confidence: 100,
+                isSafe: true, // simplified for barcode
+                warning: null,
+                carbonFootprint: "Medium",
+                sustainabilityTip: "Look for local alternatives to reduce packaging.",
+                nextActionTip: "Remember to stay hydrated after packaged foods."
+            };
+        } else {
+            return {
+                isFood: false,
+                reason: "Barcode not found in global database. Please use AI Image Scan mode."
+            };
+        }
+    } catch (e) {
+        console.error("Barcode API Error", e);
+        return {
+            isFood: false,
+            reason: "Failed to connect to barcode server."
+        };
+    }
+};
