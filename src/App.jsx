@@ -26,6 +26,11 @@ function AppContent() {
 
   useEffect(() => {
     if (user) {
+      if (user.isGuest) {
+        setUserDiet('none');
+        setView('dashboard'); // Guests skip legal and onboarding to get straight to action
+        return;
+      }
       setLoadingProfile(true);
       import('./services/firebase').then(async ({ db }) => {
         const { doc, getDoc, updateDoc } = await import('firebase/firestore');

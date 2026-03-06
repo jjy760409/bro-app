@@ -15,7 +15,7 @@ const TICKER_ITEMS = [
 ];
 
 const Login = () => {
-    const { login } = useAuth();
+    const { login, loginAsGuest } = useAuth();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [tickerIndex, setTickerIndex] = useState(0);
 
@@ -28,12 +28,23 @@ const Login = () => {
 
     const handleLogin = async () => {
         setIsLoggingIn(true);
+        // Safety timeout to reset spinner if mobile browser silently blocks redirect
+        const safetyTimeout = setTimeout(() => {
+            setIsLoggingIn(false);
+        }, 8000);
+
         try {
             await login();
+            clearTimeout(safetyTimeout);
         } catch (error) {
+            clearTimeout(safetyTimeout);
             console.error(error);
             setIsLoggingIn(false);
         }
+    };
+
+    const handleGuestLogin = () => {
+        loginAsGuest();
     };
 
     return (
@@ -88,40 +99,66 @@ const Login = () => {
                         The world's most advanced AI Nutrition Navigator. Scan your food in 1 second, get proactive health routing, and climb the global ranks.
                     </p>
 
-                    {/* Primary CTA */}
-                    <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0,255,136,0.5)' }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleLogin}
-                        disabled={isLoggingIn}
-                        style={{
-                            background: 'white',
-                            color: '#050505',
-                            border: 'none',
-                            padding: '18px 36px',
-                            borderRadius: '30px',
-                            fontSize: '1.2rem',
-                            fontWeight: 'bold',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '12px',
-                            cursor: isLoggingIn ? 'wait' : 'pointer',
-                            width: '100%',
-                            maxWidth: '320px',
-                            boxShadow: '0 10px 30px rgba(255,255,255,0.2)',
-                            transition: 'all 0.3s'
-                        }}
-                    >
-                        {isLoggingIn ? (
-                            <Activity className="animate-spin" size={24} />
-                        ) : (
-                            <>
-                                <Chrome size={24} />
-                                Continue with Google
-                            </>
-                        )}
-                    </motion.button>
+                    {/* Primary CTA Group */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '320px', alignItems: 'center' }}>
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0,255,136,0.5)' }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleLogin}
+                            disabled={isLoggingIn}
+                            style={{
+                                background: 'white',
+                                color: '#050505',
+                                border: 'none',
+                                padding: '18px 36px',
+                                borderRadius: '30px',
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '12px',
+                                cursor: isLoggingIn ? 'wait' : 'pointer',
+                                width: '100%',
+                                boxShadow: '0 10px 30px rgba(255,255,255,0.2)',
+                                transition: 'all 0.3s'
+                            }}
+                        >
+                            {isLoggingIn ? (
+                                <Activity className="animate-spin" size={24} />
+                            ) : (
+                                <>
+                                    <Chrome size={24} />
+                                    Continue with Google
+                                </>
+                            )}
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleGuestLogin}
+                            disabled={isLoggingIn}
+                            style={{
+                                background: 'transparent',
+                                color: '#ccc',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                padding: '14px 30px',
+                                borderRadius: '30px',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                cursor: isLoggingIn ? 'wait' : 'pointer',
+                                width: '100%',
+                                transition: 'all 0.3s'
+                            }}
+                        >
+                            <span style={{ fontSize: '1.2rem' }}>👻</span> Try as Guest (No Login)
+                        </motion.button>
+                    </div>
                 </motion.div>
 
                 {/* Live Social Proof Ticker */}

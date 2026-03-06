@@ -95,13 +95,23 @@ export const AuthProvider = ({ children }) => {
 
     const login = async () => {
         try {
-            // Using signInWithRedirect for mobile/in-app browser compatibility
-            await signInWithRedirect(auth, googleProvider);
+            await signInWithPopup(auth, googleProvider);
         } catch (error) {
-            console.error("Login trigger failed", error);
-            alert("Could not start login: " + error.message);
-            throw error; // Rethrow to allow Login.jsx to unset the loading state
+            console.warn("Popup blocked or failed, trying redirect...", error);
+            if (error.code === 'auth/popup-closed-by-user') {
+                throw error; // User intentionally closed it
+            }
+            // Fallback for strict mobile browsers
+            await signInWithRedirect(auth, googleProvider);
         }
+    };
+
+    const loginAsGuest = () => {
+        const guestUser = { uid: 'guest_' + Date.now(), email: 'guest@smartcal.ai', isGuest: true, displayName: "Guest User" };
+        setUser(guestUser);
+        setScansLeft(15); // Give guests generous scans to test
+        setStreak(1);
+        setAppleHealthSynced(false);
     };
 
     const logout = async () => {
@@ -111,7 +121,7 @@ export const AuthProvider = ({ children }) => {
     const decrementScans = async () => {
         setScansLeft(prev => prev - 1); // Optimistic update
 
-        if (!user) return;
+        if (!user || user.isGuest) return;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -126,7 +136,7 @@ export const AuthProvider = ({ children }) => {
     const setPremium = async (subscriptionId = 'demo-sub') => {
         setScansLeft(999999);
 
-        if (!user) return;
+        if (!user || user.isGuest) return;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -147,7 +157,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const cancelSubscription = async () => {
-        if (!user) return;
+        if (!user || user.isGuest) return;
         try {
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, {
@@ -160,7 +170,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const requestRefund = async () => {
-        if (!user) return;
+        if (!user || user.isGuest) return;
         try {
             const userRef = doc(db, "users", user.uid);
             // Simulate automated refund check (within 7 days)
@@ -177,7 +187,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const toggleHealthSync = async () => {
-        if (!user) return;
+        if (!user || user.isGuest) return;
         const newState = !appleHealthSynced;
         setAppleHealthSynced(newState);
         try {
@@ -191,7 +201,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading, appleHealthSynced, toggleHealthSync }}>
+        <AuthContext.Provider value={{ user, login, loginAsGuest, logout, scansLeft, streak, decrementScans, setPremium, cancelSubscription, requestRefund, loading, appleHealthSynced, toggleHealthSync }}>
             {!loading && children}
         </AuthContext.Provider>
     );
