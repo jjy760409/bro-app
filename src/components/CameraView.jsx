@@ -103,13 +103,34 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
     const startCamera = async () => {
         stopCamera();
         try {
-            const constraints = { video: { facingMode: facingMode } };
+            // More robust constraints for mobile 
+            const constraints = {
+                video: {
+                    facingMode: facingMode === 'environment'
+                        ? { ideal: 'environment' }
+                        : { ideal: 'user' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            };
+
             const newStream = await navigator.mediaDevices.getUserMedia(constraints);
             setStream(newStream);
-            if (videoRef.current) videoRef.current.srcObject = newStream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = newStream;
+            }
         } catch (err) {
             console.error("Error accessing camera:", err);
-            alert("Camera access required. Please ensure HTTPS or localhost.");
+            // Fallback to absolute basic constraints if the "ideal" logic fails (some old Androids)
+            try {
+                const basicStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                setStream(basicStream);
+                if (videoRef.current) {
+                    videoRef.current.srcObject = basicStream;
+                }
+            } catch (fallbackErr) {
+                alert("Camera access completely blocked. Please check your browser permissions in Settings.");
+            }
         }
     };
 
