@@ -64,21 +64,31 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
     useEffect(() => {
         let model = null;
         let animationFrameId = null;
+        let isCancelled = false;
 
         const initDeepLearning = async () => {
+            if (!stream || isModelLoaded) return; // Only load when stream is ready and not already loaded
+
             try {
+                // Short delay to allow video to render visually before hitting the GPU
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                if (isCancelled) return;
+
                 setHudText('LOADING NEURAL NETWORKS (COCO-SSD)...');
                 model = await cocoSsd.load();
+                if (isCancelled) return;
+
                 setIsModelLoaded(true);
                 setHudText('SENSORS ACTIVE. SCANNING...');
                 detectFrame();
             } catch (err) {
                 console.error("TFJS Load Error:", err);
-                setHudText('SENSOR INITIALIZATION FAILED.');
+                setHudText('SENSOR INITIALIZATION FAILED. (TAP REFRESH TO RETRY)');
             }
         };
 
         const detectFrame = async () => {
+            if (isCancelled) return;
             if (videoRef.current && videoRef.current.readyState === 4 && model) {
                 try {
                     const preds = await model.detect(videoRef.current);
@@ -96,40 +106,50 @@ const CameraView = ({ onCapture, onHistory, onShare, onProfile, onLeaderboard, i
         initDeepLearning();
 
         return () => {
+            isCancelled = true;
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [stream]); // Dependency on stream so it only loads after camera is alive
 
     const startCamera = async () => {
         stopCamera();
+
+        // 1st Try: Ideal High-Res with specific facingMode
         try {
-            // More robust constraints for mobile 
             const constraints = {
                 video: {
-                    facingMode: facingMode === 'environment'
-                        ? { ideal: 'environment' }
-                        : { ideal: 'user' },
+                    facingMode: facingMode === 'environment' ? { ideal: 'environment' } : { ideal: 'user' },
                     width: { ideal: 1920 },
                     height: { ideal: 1080 }
                 }
             };
-
             const newStream = await navigator.mediaDevices.getUserMedia(constraints);
             setStream(newStream);
-            if (videoRef.current) {
-                videoRef.current.srcObject = newStream;
-            }
-        } catch (err) {
-            console.error("Error accessing camera:", err);
-            // Fallback to absolute basic constraints if the "ideal" logic fails (some old Androids)
+            if (videoRef.current) videoRef.current.srcObject = newStream;
+        } catch (err1) {
+            console.warn("High-res camera access failed, trying standard resolution...", err1);
+
+            // 2nd Try: Basic Resolution with facingMode
             try {
-                const basicStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                setStream(basicStream);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = basicStream;
+                const standardConstraints = {
+                    video: { facingMode: facingMode }
+                };
+                const stdStream = await navigator.mediaDevices.getUserMedia(standardConstraints);
+                setStream(stdStream);
+                if (videoRef.current) videoRef.current.srcObject = stdStream;
+            } catch (err2) {
+                console.warn("Specific facing camera failed, trying ANY available camera...", err2);
+
+                // 3rd Try: Absolute bare minimum requirement, ignore facingMode and resolution entirely
+                try {
+                    const basicStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    setStream(basicStream);
+                    if (videoRef.current) videoRef.current.srcObject = basicStream;
+                } catch (fatalErr) {
+                    console.error("Camera completely blocked:", fatalErr);
+                    setHudText("FATAL ERROR: CAMERA HARDWARE DENIED OR IN USE");
+                    alert("Unable to access camera. Please allow camera permissions in your mobile browser settings.");
                 }
-            } catch (fallbackErr) {
-                alert("Camera access completely blocked. Please check your browser permissions in Settings.");
             }
         }
     };
